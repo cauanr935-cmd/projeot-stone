@@ -1,0 +1,35 @@
+# Fonte única de parâmetros da coleta (Instagram, YouTube, extração de mídia).
+saida_padrao: dados
+perfis_csv: config/perfis.csv
+
+# Trava de custo: acima disso, a coleta paga exige --confirmo-custo.
+max_perfis_sem_confirmacao: 5
+
+instagram:
+  actor_posts: apify/instagram-scraper
+  actor_perfis: apify/instagram-profile-scraper
+  idade_minima_dias: 14        # regra do case: métricas estabilizadas
+  limite_padrao: 150           # posts por perfil
+  max_slides: 10
+  tipos:                       # type do Apify -> tipo_post
+    Video: reels
+    Sidecar: carrossel
+    Image: imagem
+
+youtube:
+  idade_minima_dias: 14
+  short_max_segundos: 180      # heurística: vídeo <= 180 s é Short
+  limite_padrao: 150           # vídeos inspecionados por canal (mais recentes)
+  baixar_apenas_shorts: true
+  formato_ytdlp: "best[height<=720][ext=mp4]/best[height<=720]/best"
+
+midia:
+  gancho_segundos: 3
+  gancho_fps: 2                # 1 frame a cada 0,5 s
+  corpo_intervalo_s: 3
+  largura: 512
+  audio_hz: 16000
+
+download:
+  tentativas: 4
+  timeout_s: 60

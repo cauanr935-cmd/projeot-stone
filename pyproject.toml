@@ -21,6 +21,10 @@ ml = [
   "mediapipe", "kokoro-onnx", "piper-tts"
 ]
 agpl = ["ultralytics"]
+coleta = [
+  "apify-client>=1.7", "google-api-python-client>=2.100", "isodate>=0.6",
+  "yt-dlp>=2024.10.0", "pandas>=2.0", "pyarrow>=14.0", "requests>=2.31", "python-dotenv"
+]
 dev = ["pytest", "pytest-asyncio", "respx", "ruff"]
 
 [tool.setuptools.packages.find]

@@ -55,3 +55,7 @@ def load_licenses() -> dict:
 
 def load_script_templates() -> dict:
     return _read("script_templates.yaml")
+
+
+def load_coleta() -> dict:
+    return _read("coleta.yaml")
