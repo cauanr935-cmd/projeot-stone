@@ -1,0 +1,15 @@
+{
+  "servers": {
+    "impulso-stone-reels": {
+      "type": "stdio",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": ["-m", "src.mcp_server"],
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "REELS_WORKSPACE": "${workspaceFolder}/workspace"
+      }
+    }
+  }
+}

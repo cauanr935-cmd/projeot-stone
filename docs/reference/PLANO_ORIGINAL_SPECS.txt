@@ -1,0 +1,363 @@
+Parte 1: Protocolo de Execução para o Claude Code (CLAUDE.md)
+Salve o bloco abaixo na raiz do repositório como CLAUDE.md para instruir o agente sobre o ciclo de trabalho:
+
+Markdown
+# Diretrizes de Execução Autônoma - Impulso Stone Reels MCP
+
+1. **Fluxo Sequencial Estrito**: Implemente uma Spec por vez (Spec 01 -> Spec 07). É proibido iniciar a próxima Spec antes que todos os comandos da seção "Métricas de Autoverificação" da Spec atual passem com sucesso (`exit code 0`).
+2. **Isolamento de Dependências Humanas**: Se uma API externa não estiver configurada no `.env`, o código DEVE acionar automaticamente o *Tier 3 (Fallback Local)* sem quebrar a execução. Nunca pare a implementação pedindo chaves de API; registre quaisquer pendências em `docs/HUMAN_DEPENDENCIES.md`.
+3. **Documentação de Decisões Técnicas (ADRs)**: Ao concluir cada Spec, crie ou atualize o respectivo arquivo em `docs/adr/` documentando os *trade-offs*, parâmetros calibrados e justificativas técnicas.
+4. **Higiene de Mídia**: Todo vídeo final deve ser validado via `ffprobe` garantindo `1080x1920`, `yuv420p`, `H.264`, `CFR` (Constant Frame Rate) e áudio `AAC`.
+Parte 2: Sequência de Specs de Implementação
+Spec 01: Fundação, Governança de Arquitetura (ADRs) e Servidor MCP Base
+Objetivo: Configurar a estrutura do projeto, o sistema de registro de decisões técnicas (ADRs), gerador de mídia sintética de teste (para que o agente possa testar pipelines sem depender de arquivos externos inicialmente) e o servidor FastMCP expondo as primitivas Resources, Prompts e Tools.   
+Arquitetura MCP Gratuita para Reels.md
+
+Entregáveis de Código:
+
+src/mcp_server.py: Servidor MCP inicializado com suporte a Roots (/workspace/impulso_stone).   
+Arquitetura MCP Gratuita para Reels.md
+
+src/resources/cnae_profiles.py: Implementação do recurso stone-cnae://profiles/{cnae_code} mapeando os 5 segmentos e seus respectivos frameworks de conversão (BAB, Product Demo + PAS, UGC Testimonial Flow, PAS, AIDA).   
+Arquitetura MCP Gratuita para Reels.md
+
+tests/fixtures/generate_test_media.py: Script usando ffmpeg (testsrc, sine) e PIL para gerar 1 vídeo horizontal (16:9, VFR simulado, com pausas de silêncio) e 3 imagens estáticas de teste.
+
+docs/adr/: Criação dos ADRs iniciais (001 a 005).
+
+Métricas de Autoverificação (Claude Code):
+
+Executar python tests/fixtures/generate_test_media.py e verificar existência de tests/fixtures/sample_raw.mp4 (> 0 bytes) e tests/fixtures/img_{1..3}.jpg.
+
+Executar pytest tests/test_spec01_mcp.py validando que get_cnae_marketing_profile retorna JSON válido contendo as chaves framework, cut_style, target_cuts_per_sec, reframe_preset e tts_voice para os 5 perfis mapeados.   
+Arquitetura MCP Gratuita para Reels.md
+
+Spec 02: Motor de Roteamento Inteligente em Cascata (ZeroCostCascadeRouter)
+Objetivo: Implementar a camada de resiliência de inferência que alterna entre Free Tiers de nuvem e motores locais gratuitos, inspecionando cabeçalhos HTTP (x-ratelimit-remaining-*) e aplicando bloqueios de licença comercial e privacidade.   
+Arquitetura MCP Gratuita para Reels.md
+
+Entregáveis de Código:
+
+src/router/cascade_router.py: Classe ZeroCostCascadeRouter implementando:
+
+Cascata ASR (Transcrição): Groq (whisper-large-v3-turbo) 
+→ Cloudflare Workers AI 
+→ WhisperX local / faster-whisper com alinhamento wav2vec2 para word-level timestamps ao milissegundo.   
+Arquitetura MCP Gratuita para Reels.md
+
+Cascata TTS PT-BR (Locução): edge-tts (pt-BR-FranciscaNeural, pt-BR-AntonioNeural, pt-BR-ThalitaMultilingualNeural) 
+→ Kokoro-82M / Piper TTS local (CC0).   
+Arquitetura MCP Gratuita para Reels.md
+
+Cascata LLM/VLM: Groq / Gemini Flash (com circuit breaker caso contains_sensitive_data=True) 
+→ Ollama local (qwen2.5vl / llama3.2).   
+Arquitetura MCP Gratuita para Reels.md
+
+Cache Local SHA-256: Armazenamento em disco de respostas de TTS, ASR e API da Pixabay (mínimo 24h).   
+Arquitetura MCP Gratuita para Reels.md
+
+Guardrail Jurídico: Validador de schema que lança exceção se fontes não-comerciais (elevenlabs-free, epidemicsound-free, freesound) forem passadas para renderização comercial.   
+Arquitetura MCP Gratuita para Reels.md
+
+Métricas de Autoverificação (Claude Code):
+
+Executar pytest tests/test_spec02_router.py:
+
+Simular resposta HTTP 429 RESOURCE_EXHAUSTED no Tier 1 e validar comutação automática para o Tier local em < 500ms.   
+Arquitetura MCP Gratuita para Reels.md
+
+Validar geração real de arquivo .mp3 e .srt via synthesize_ptbr_voiceover e verificar que a segunda chamada idêntica retorna cache_hit=True.   
+Arquitetura MCP Gratuita para Reels.md
+
+Validar que tentativa de uso de fonte bloqueada dispara CommercialLicenseViolationError.
+
+Spec 03: Pipeline de Visão Computacional, Normalização CFR e Reframe 9:16
+Objetivo: Processar vídeos brutos locais convertendo VFR para CFR, detectando cortes de cena, pontuando ganchos (Hook & Climax Finder) e reenquadrando vídeos horizontais (16:9) para vertical (9:16, 1080x1920).   
+Arquitetura MCP Gratuita para Reels.md
+
+Entregáveis de Código:
+
+src/vision/normalizer.py: Ingestão com ffprobe e normalização via ffmpeg -vsync cfr corrigindo offsets de áudio.   
+Arquitetura MCP Gratuita para Reels.md
+
+src/vision/scene_detector.py: Detecção de cenas via scenedetect-headless (ContentDetector + AdaptiveDetector com downscale_factor=2 e min_scene_len="0.6s"), exportando scenes.csv e expondo como Resource MCP.   
+Arquitetura MCP Gratuita para Reels.md
+
+src/vision/reframe_9_16.py: Reenquadramento inteligente usando YOLOv11-seg / MediaPipe (estratégia TRACK com suavização de câmera virtual ou fallback LETTERBOX).   
+Arquitetura MCP Gratuita para Reels.md
+
+src/vision/hook_finder.py: Cálculo da pontuação composta 
+S(c 
+i
+​
+ ) combinando ataque acústico (librosa.onset.onset_strength), presença facial e baixa entropia visual de fundo no Frame Zero.   
+Arquitetura MCP Gratuita para Reels.md
+
+Métricas de Autoverificação (Claude Code):
+
+Executar pipeline sobre tests/fixtures/sample_raw.mp4.
+
+Verificar saída via ffprobe -v error -select_streams v:0 -show_entries stream=width,height,r_frame_rate,avg_frame_rate -of json output_9_16.mp4:
+
+width == 1080 e height == 1920.   
+Arquitetura MCP Gratuita para Reels.md
+
+r_frame_rate == avg_frame_rate (confirmando CFR).   
+Arquitetura MCP Gratuita para Reels.md
+
+Validar geração do arquivo multimodal_summary.json contendo ao menos 1 segmento de gancho (0–3s) pontuado.   
+Arquitetura MCP Gratuita para Reels.md
+
+Spec 04: Síntese 2.5D de Fotos Estáticas (Deformação Zero de Produto)
+Objetivo: Transformar pastas de fotos estáticas de produtos em clipes dinâmicos de vídeo 1080x1920 sem deformar logotipos, textos ou texturas reais dos produtos.   
+Arquitetura MCP Gratuita para Reels.md
+
+Entregáveis de Código:
+
+src/animation/parallax_2_5d.py: Estimativa de mapa de profundidade monocular (Depth Anything V2 ou fallback geométrico) com ancoragem de caixa central (PIVOT_CENTER_BOX) para garantir deslocamento líquido zero sobre o produto principal.   
+Arquitetura MCP Gratuita para Reels.md
+
+src/animation/optical_flow_morph.py: Interpolação de perspectiva entre 
+N≥2 fotos do produto via OpenCV DIS Optical Flow em CPU + adição de oscilação orgânica (handheld sway).   
+Arquitetura MCP Gratuita para Reels.md
+
+Métricas de Autoverificação (Claude Code):
+
+Executar animate_static_image_2_5d sobre tests/fixtures/img_1.jpg (duração alvo: 5s, 30 fps).   
+Arquitetura MCP Gratuita para Reels.md
+
+Verificar via ffprobe que parallax_move.mp4 possui 1080x1920, nb_frames == 150 (
+±2) e pix_fmt == yuv420p.   
+Arquitetura MCP Gratuita para Reels.md
+
+Métrica de Deformação Zero: Extrair o recorte central (PIVOT_CENTER_BOX) do frame inicial e do frame central e calcular o índice de similaridade estrutural (SSIM) ou correlação de histograma, garantindo SSIM >= 0.90 na região ancorada do produto.   
+Arquitetura MCP Gratuita para Reels.md
+
+Spec 05: Engenharia de Jump-Cuts Calibrados (AST), MIR e Legendas Karaoke .ASS
+Objetivo: Automatizar a montagem rítmica aplicando os parâmetros científicos de retenção (Dost & Huang), sincronia de batidas musicais (MIR), audio ducking e legendas dinâmicas palavra a palavra.   
+Arquitetura MCP Gratuita para Reels.md
+
+Entregáveis de Código:
+
+src/editing/jumpcuts.py: Implementação de build_ast_calibrated_jumpcuts com passagem rápida -vn (silencedetect), suportando os estilos:
+
+seamless (PAD = 0.090s, preservando janela temporal AST de ~180ms para maximizar Likes).   
+Arquitetura MCP Gratuita para Reels.md
+
+overlapping (PAD = 0.015s, comprimindo pausas para < 40ms para sustentar conclusão/retenção).   
+Arquitetura MCP Gratuita para Reels.md
+
+Injeção de micro-fades acústicos de 15ms (afade) sem quantizar o corte de áudio ao frame de vídeo, e punch-in zoom alternado (1.0 
+↔ 1.08).   
+Arquitetura MCP Gratuita para Reels.md
+
+src/editing/beat_sync.py: Extração de beats e downbeats via librosa / madmom e atenuação dinâmica (audio ducking) da trilha de fundo durante atividade vocal.   
+Arquitetura MCP Gratuita para Reels.md
+
+src/editing/subtitles_ass.py: Geração de legendas .ass via pysubs2 com estilo ImpulsoKaraoke (blocos de no máximo 4 palavras, cadência de 5 a 10 palavras/segundo, destaque em amarelo/ciano {\c&H34C9FC&\fscx112\fscy112} na palavra ativa e limite estrito de 
+≤5 palavras no Frame Zero).   
+Arquitetura MCP Gratuita para Reels.md
+
+Métricas de Autoverificação (Claude Code):
+
+Executar pytest tests/test_spec05_editing.py:
+
+Validar que a duração do vídeo pós-corte de silêncio é estritamente menor que a duração original, sem cliques acústicos nas junções.   
+Arquitetura MCP Gratuita para Reels.md
+
+Validar parse do arquivo .ass gerado via pysubs2.load(), verificando PlayResX == 1080, PlayResY == 1920, máximo de 4 palavras por evento e 
+≤5 palavras nos eventos entre 0ms e 3000ms.   
+Arquitetura MCP Gratuita para Reels.md
+
+Spec 06: Seletor Interativo dos 5 Formatos da Pesquisa e Diretor Criativo
+Objetivo: Construir a interface interativa (CLI e MCP Elicitation/Prompt) que inspeciona a pasta de conteúdos brutos do usuário (vídeos, fotos, áudios) e pergunta explicitamente qual dos 5 formatos mapeados na pesquisa é esperado, configurando os parâmetros técnicos automaticamente.   
+Arquitetura MCP Gratuita para Reels.md
+
+Os 5 Formatos Mapeados na Pesquisa (Menu Obrigatório):
+
+BAB (Before-After-Bridge — 30s): Foco em Beleza, Estética e Transformação Visual (0–8s Antes, 8–20s Depois no downbeat, 20–27s Ponte, 27–30s CTA WhatsApp/Pix; Corte Seamless a 0.517 cortes/s).   
+Arquitetura MCP Gratuita para Reels.md
+
+Product Demo + PAS (15s a 30s): Foco em Alimentação, Confeitaria e Gastronomia (0–5s Feature Hook de alta textura, 5–18s Passo a passo na batida, 18–24s Diferencial, 24–30s Prova + CTA; Paralaxe 2.5D com PIVOT_CENTER_BOX e PARALLAX_STRENGTH=10).   
+Arquitetura MCP Gratuita para Reels.md
+
+UGC Testimonial Flow (21s a 35s): Foco em Comércio Varejista, Moda, Vestuário e Artesanato (0–4s Gancho pessoal, 4–12s Contexto, 12–22s Descoberta/Peças, 22–30s Recomendação casual; Fluxo óptico entre fotos + handheld sway, Corte Seamless a 0.331 cortes/s).   
+Arquitetura MCP Gratuita para Reels.md
+
+PAS (Problem-Agitate-Solution — 20s a 30s): Foco em Serviços Técnicos, Reparos, Construção e Logística (0–5s Defeito real, 5–18s Risco/Agitação, 18–25s Execução limpa, 25–30s Orçamento rápido; Corte Overlapping a 0.331 cortes/s para retenção técnica).   
+Arquitetura MCP Gratuita para Reels.md
+
+AIDA (Attention-Interest-Desire-Action — 35s a 45s): Foco em Ensino, Fitness, Pets e Serviços Locais (0–5s Afirmação contraintuitiva, 5–18s Dica prática, 18–35s Benefício, 35–45s CTA com Seamless Loop sintático conectando a última frase aos primeiros 3s).   
+Arquitetura MCP Gratuita para Reels.md
+
+Entregáveis de Código:
+
+src/director/interactive_cli.py: Scanner de pasta de entrada (--input-dir) + prompt interativo apresentando os 5 formatos ao usuário (com suporte a flag --format [1-5] para testes automatizados em CI) + geração do plano de edição JSON (edit_plan.json).   
+Arquitetura MCP Gratuita para Reels.md
+
+Métricas de Autoverificação (Claude Code):
+
+Executar teste simulando entrada via stdin (selecionando cada uma das opções de 1 a 5) e verificar se o edit_plan.json gerado aplica exatamente a divisão temporal, a voz TTS, a frequência de corte e a regra de Seamless Loop correspondentes à tabela da pesquisa.   
+Arquitetura MCP Gratuita para Reels.md
+
+Spec 07: Orquestrador End-to-End e Renderizador Final de Reels
+Objetivo: Integrar todos os subsistemas na ferramenta MCP assemble_and_render_reel e no comando CLI final, realizando validação pré-voo (preflight validation) e renderizando o arquivo .mp4 pronto para publicação no Instagram Reels.   
+Arquitetura MCP Gratuita para Reels.md
+
+Entregáveis de Código:
+
+src/renderer/reel_assembler.py: Construtor do grafo filter_complex do FFmpeg combinando vídeos reenquadrados (9:16), clipes 2.5D de imagens estáticas, locução TTS PT-BR, música de fundo com ducking e queima de legendas .ass.   
+Arquitetura MCP Gratuita para Reels.md
+
+src/main.py: Ponto de entrada completo que recebe uma pasta com conteúdos mistos (vídeos + imagens), pergunta qual dos 5 formatos o usuário deseja e entrega o Reel renderizado em output/reel_final.mp4.
+
+Métricas de Autoverificação Final (Claude Code):
+
+Executar o fluxo completo de ponta a ponta para um conjunto misto (1 vídeo bruto + 2 imagens estáticas) testando os 5 formatos.
+
+Executar script de auditoria tests/verify_final_reel.py sobre o vídeo gerado validando todos os critérios abaixo:
+
+codec_name == "h264" e pix_fmt == "yuv420p".   
+Arquitetura MCP Gratuita para Reels.md
+
+width == 1080 e height == 1920 (proporção 9:16 exata).   
+Arquitetura MCP Gratuita para Reels.md
+
+Faixa de áudio presente (codec_name == "aac", sample_rate >= 44100) e nível médio de áudio integrado entre -24 LUFS e -10 LUFS (garantindo que não é uma faixa muda).   
+Arquitetura MCP Gratuita para Reels.md
+
+Duração total dentro da janela estrita do formato escolhido (ex.: 15s a 45s).   
+Arquitetura MCP Gratuita para Reels.md
+
+Parte 3: Documentação de Decisões Técnicas (docs/adr/ARCHITECTURE_DECISIONS.md)
+O Claude Code deve manter este documento atualizado na pasta docs/adr/ registrando o racional arquitetural do projeto:   
+Arquitetura MCP Gratuita para Reels.md
+
+ADR-001: Topologia Híbrida MCP com Uso Integral das 3 Primitivas (Prompts, Resources, Tools)
+
+Contexto: Servidores MCP que expõem apenas Tools forçam o LLM a gastar chamadas de inferência e tokens de contexto para buscar transcrições e listas de cenas.   
+Arquitetura MCP Gratuita para Reels.md
+
+Decisão: Expor perfis CNAE e resumos multimodais (transcript.json, scenes.csv) como Resources anexados pelo cliente (custo zero de tool call), templates dos 5 frameworks como Prompts e processamento pesado de mídia como Tools.   
+Arquitetura MCP Gratuita para Reels.md
+
+ADR-002: Roteamento em Cascata (Zero-Cost Cascade) e Isolamento de Dados Sensíveis
+
+Contexto: Limites voláteis de free tiers (RPD/TPM da Groq, Neurônios diários da Cloudflare, quota de 300s/dia da ZeroGPU) e cláusula de treino de dados no plano gratuito da Gemini API.   
+Arquitetura MCP Gratuita para Reels.md
+
+Decisão: Implementar ZeroCostCascadeRouter com leitura de headers HTTP em tempo real, cache SHA-256 local de 24h e desvio automático para inferência local (Ollama Qwen2.5-VL, WhisperX, Piper TTS) quando houver limite de quota ou presença de dados sensíveis do MEI.   
+Arquitetura MCP Gratuita para Reels.md
+
+ADR-003: Animação Determinística 2.5D Local vs. Vídeo Generativo (I2V) para Produtos
+
+Contexto: APIs comerciais de geração de vídeo são pagas por segundo e modelos difusores re-sintetizam pixels, deformando logotipos, rótulos e texturas de produtos reais (bolos, roupas, peças).   
+Arquitetura MCP Gratuita para Reels.md
+
+Decisão: Adotar pipeline local 2.5D (Depth Anything V2 + OpenCV DIS Optical Flow) com ancoragem no plano de pivô (PIVOT_CENTER_BOX), garantindo deslocamento líquido zero e deformação zero nos pixels do produto a custo operacional nulo.   
+Arquitetura MCP Gratuita para Reels.md
+
+ADR-004: Calibração Neuromarketing de Jump-Cuts (Fluência vs. Modelo AST) e Higiene A/V
+
+Contexto: Necessidade de reter atenção nos primeiros 3 segundos (Swipe Zone) e evitar decaimento na Pacing Slope (> 5s) sem amputar fonemas.   
+Arquitetura MCP Gratuita para Reels.md
+
+Decisão: Calibrar cortes conforme Dost & Huang (2026) em estilo Seamless (PAD=0.090s, 0.517 ou 0.331 cortes/s para Likes) e Overlapping (PAD=0.015s, 0.331 cortes/s para retenção em vídeos técnicos), mantendo o corte de áudio no milissegundo exato com afade de 15ms e normalização prévia para CFR (-vsync cfr).   
+Arquitetura MCP Gratuita para Reels.md
+
+ADR-005: Bloqueio de Licenças Não-Comerciais em Ativos de Áudio e Voz
+
+Contexto: Planos gratuitos da ElevenLabs, Epidemic Sound e Freesound proíbem uso comercial em seus Termos de Serviço.   
+Arquitetura MCP Gratuita para Reels.md
+
+Decisão: Bloquear essas rotas no schema de renderização e restringir o sistema a motores comercialmente livres (edge-tts, Kokoro-82M, Piper TTS CC0, Pixabay API com cache de 24h e anexação nativa via bibliotecas oficiais do Instagram/TikTok).   
+Arquitetura MCP Gratuita para Reels.md
+
+Parte 4: Documentação de Demandas Humanas (docs/HUMAN_DEPENDENCIES.md)
+As demandas abaixo exigem ação humana (criação de contas ou download de binários de sistema) e devem ficar isoladas em docs/HUMAN_DEPENDENCIES.md. Nenhuma chave de API de nuvem é bloqueante para o Claude Code concluir o projeto, pois todas possuem fallback local configurado na arquitetura:   
+Arquitetura MCP Gratuita para Reels.md
+
+1. Chaves de API Gratuitas (Opcionais — Aceleram os Tiers 1 e 2)
+O humano deve criar as chaves gratuitas abaixo (padrão Bring Your Own Free Key sem cartão de crédito) e preenchê-las no arquivo .env:   
+Arquitetura MCP Gratuita para Reels.md
+
+Variável no .env	Provedor / Console	Função na Arquitetura	Limite Gratuito de Referência	Fallback Automático se Ausente
+GROQ_API_KEY	Groq Console	
+ASR (whisper-large-v3-turbo) e LLM (gpt-oss-120b / qwen3.8-27b) 
+Arquitetura MCP Gratuita para Reels.md
+
+28.800s áudio/dia; 8.000 TPM 
+Arquitetura MCP Gratuita para Reels.md
+
+WhisperX local + Ollama local 
+Arquitetura MCP Gratuita para Reels.md
+
+GEMINI_API_KEY	
+Google AI Studio (1 chave por projeto) 
+Arquitetura MCP Gratuita para Reels.md
+
+Análise Multimodal de Vídeo (gemini-3.8-flash) 
+Arquitetura MCP Gratuita para Reels.md
+
+Quota por projeto (reinicia 00:00 PT) 
+Arquitetura MCP Gratuita para Reels.md
+
+Ollama (qwen2.5vl:latest) 
+Arquitetura MCP Gratuita para Reels.md
+
+CLOUDFLARE_API_TOKEN & CLOUDFLARE_ACCOUNT_ID	Cloudflare Workers AI	
+Tier 2 ASR (whisper) e TTS (melotts) 
+Arquitetura MCP Gratuita para Reels.md
+
+10.000 Neurônios/dia (reinicia 00:00 UTC) 
+Arquitetura MCP Gratuita para Reels.md
+
+WhisperX local + edge-tts / Piper 
+Arquitetura MCP Gratuita para Reels.md
+
+PIXABAY_API_KEY	Pixabay API	
+Busca de músicas e efeitos sonoros (SFX) com licença comercial gratuita 
+Arquitetura MCP Gratuita para Reels.md
+
+100 requisições/min (exige cache de 24h) 
+Arquitetura MCP Gratuita para Reels.md
+
+Biblioteca local de faixas CC0 em assets/audio_cc0/ 
+Arquitetura MCP Gratuita para Reels.md
+
+HF_TOKEN	Hugging Face	
+Tier 2 de vídeo generativo B-roll via Spaces ZeroGPU 
+Arquitetura MCP Gratuita para Reels.md
+
+300s (5 min) de ZeroGPU por dia 
+Arquitetura MCP Gratuita para Reels.md
+
+Motor Local 2.5D (Depth Anything V2 + OpenCV DIS) 
+Arquitetura MCP Gratuita para Reels.md
+
+MISTRAL_API_KEY / CEREBRAS_API_KEY	Mistral / Cerebras	
+Tier 2 de geração de roteiro e copywriting para prompts longos 
+Arquitetura MCP Gratuita para Reels.md
+
+Até 500K TPM (Mistral) / 1M TPD (Cerebras) 
+Arquitetura MCP Gratuita para Reels.md
+
+Ollama local (llama3.2 / qwen2.5-coder) 
+Arquitetura MCP Gratuita para Reels.md
+
+2. Provisionamento de Ambiente Local e Pesos Open-Source
+Caso o ambiente de execução ainda não possua os binários base instalados, a ação humana (ou script de bootstrap autorizado com permissões de sistema) consiste em:
+
+Binários de Sistema: Garantir instalação do ffmpeg e ffprobe no PATH do sistema e a fonte Montserrat ExtraBold instalada para renderização fiel do estilo .ass.   
+Arquitetura MCP Gratuita para Reels.md
+
+Servidor Ollama Local (Tier 3 VLM/LLM): Instalar o Ollama e baixar os modelos locais com ollama pull qwen2.5vl:latest e ollama pull llama3.2.   
+Arquitetura MCP Gratuita para Reels.md
+
+Pesos Locais de Voz e Visão: Baixar o modelo ONNX pt_BR-faber-medium.onnx (Piper TTS CC0) em /models/ e permitir o download automático no primeiro uso dos pesos yolo11n-seg.pt e Depth-Anything-V2-Small.   
+Arquitetura MCP Gratuita para Reels.md
+
+Credenciais de Publicação Direta (Apenas se houver postagem automática): Caso o usuário deseje anexar áudios comerciais diretamente no ato da postagem via API, é necessária uma conta Meta for Developers (Instagram Graph Audio API) ou TikTok for Business (Commercial Music Library). Para geração local do arquivo .mp4 final, nenhuma conta de rede social é necessária.   
+Arquitetura MCP Gratuita para Reels.md
+
+Deseja que eu gere os arquivos .md individuais (CLAUDE.md, SPEC_01 a SPEC_07, ARCHITECTURE_DECISIONS.md e HUMAN_DEPENDENCIES.md) prontos para download ou prefere ajustar algum critério de verificação antes de iniciar no Claude Code?

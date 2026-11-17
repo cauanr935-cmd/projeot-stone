@@ -1,0 +1,55 @@
+# =============================================================================
+# Mapeamento CNAE (subclasse) -> formato (config/formats.yaml)
+# Exposto pelo Resource MCP  stone-cnae://profiles/{cnae_code}
+#
+# O código CNAE em URI deve aceitar as formas "9602-5/01", "9602501" e
+# "9602-5-01" (normalizar removendo tudo que não é dígito -> 7 dígitos).
+#
+# ATENÇÃO (pendência humana registrada em docs/HUMAN_DEPENDENCIES.md):
+#  A pesquisa usa "4321-5/01" para eletricista. A subclasse oficial do IBGE
+#  é "4321-5/00" (Instalação e manutenção elétrica). Mantemos 4321-5/01 como
+#  alias. Um humano deve validar a lista contra a tabela CNAE/IBGE e a lista
+#  de ocupações MEI do Portal do Empreendedor.
+# =============================================================================
+version: 1
+default_cnae: "5620-1/04"   # usado quando o código não é encontrado (retornar "fallback": true)
+
+segments:
+  beleza:
+    label: "Beleza, Estética e Cuidados Pessoais"
+    format_id: 1
+    pix_share_note: "52% recebem via Pix (pesquisa)"
+  alimentacao:
+    label: "Alimentação, Confeitaria e Marmitaria"
+    format_id: 2
+  varejo_moda:
+    label: "Comércio Varejista de Vestuário, Moda e Artesanato"
+    format_id: 3
+    pix_share_note: "62–63% das vendas via Pix (pesquisa)"
+  servicos_tecnicos:
+    label: "Serviços Técnicos, Reparos, Construção e Logística"
+    format_id: 4
+  ensino_servicos_locais:
+    label: "Ensino, Treino, Fitness, Pets e Serviços Locais"
+    format_id: 5
+
+profiles:
+  "9602-5/01": {segment: beleza, ocupacao: "Cabeleireiro / Manicure e Pedicure"}
+  "9602-5/02": {segment: beleza, ocupacao: "Maquiador / Estética e outros cuidados com a beleza"}
+  "5620-1/04": {segment: alimentacao, ocupacao: "Doceiro / Marmiteiro independente (alimentos para consumo domiciliar)"}
+  "1091-1/02": {segment: alimentacao, ocupacao: "Confeiteiro (padaria e confeitaria com produção própria)"}
+  "1091-1/01": {segment: alimentacao, ocupacao: "Padeiro (panificação)"}
+  "4781-4/00": {segment: varejo_moda, ocupacao: "Comércio varejista de artigos do vestuário e acessórios"}
+  "1412-6/02": {segment: varejo_moda, ocupacao: "Costureiro (confecção sob medida)"}
+  "3212-4/00": {segment: varejo_moda, ocupacao: "Fabricante de bijuterias e artefatos semelhantes"}
+  "4321-5/00": {segment: servicos_tecnicos, ocupacao: "Eletricista (instalação e manutenção elétrica)", aliases: ["4321-5/01"]}
+  "4520-0/01": {segment: servicos_tecnicos, ocupacao: "Mecânico de veículos"}
+  "4399-1/03": {segment: servicos_tecnicos, ocupacao: "Pedreiro (obras de alvenaria)"}
+  "4330-4/04": {segment: servicos_tecnicos, ocupacao: "Pintor de edificações"}
+  "8599-6/99": {segment: ensino_servicos_locais, ocupacao: "Professor particular / outras atividades de ensino"}
+  "9609-2/08": {segment: ensino_servicos_locais, ocupacao: "Pet sitter / higiene e embelezamento de animais"}
+
+# Chaves que o Resource DEVE retornar (contrato testado na Spec 01):
+#   cnae_code, ocupacao, segment, format_id, framework, cut_style,
+#   target_cuts_per_sec, reframe_preset, tts_voice, duration, segments,
+#   seamless_loop, parallax_strength (quando aplicável), fallback (bool)

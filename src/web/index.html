@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111827">
+  <title>Impulso Reels — editor</title>
+  <style>
+    :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #17211d; background: #f4f6f4; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; }
+    header { background: #10251c; color: white; padding: 22px max(24px, calc((100% - 900px) / 2)); }
+    header strong { color: #72df9b; letter-spacing: .02em; }
+    main { max-width: 760px; margin: 42px auto; padding: 0 22px 48px; }
+    h1 { margin: 0 0 8px; font-size: clamp(1.7rem, 5vw, 2.4rem); }
+    .intro, .help { color: #53615a; line-height: 1.55; }
+    form, .result { margin-top: 26px; padding: 26px; background: white; border: 1px solid #e1e8e3; border-radius: 16px; box-shadow: 0 8px 26px #1833220a; }
+    label { display: block; font-weight: 650; margin: 18px 0 8px; }
+    label:first-child { margin-top: 0; }
+    input, select, textarea { width: 100%; padding: 12px 13px; border: 1px solid #cbd6ce; border-radius: 9px; font: inherit; background: white; }
+    textarea { min-height: 122px; resize: vertical; line-height: 1.5; }
+    small { display: block; margin-top: 6px; color: #66746b; line-height: 1.45; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .check { display: flex; align-items: flex-start; gap: 10px; font-weight: 500; line-height: 1.45; }
+    .check input { width: auto; margin: 4px 0 0; accent-color: #16834b; }
+    button, .download { display: inline-block; border: 0; border-radius: 9px; padding: 13px 20px; font: inherit; font-weight: 700; color: white; background: #147843; cursor: pointer; text-decoration: none; }
+    button:hover, .download:hover { background: #0b6035; }
+    button:disabled { opacity: .6; cursor: wait; }
+    .submit { width: 100%; margin-top: 22px; }
+    .status { padding: 14px; border-radius: 9px; background: #eff5f0; line-height: 1.5; overflow-wrap: anywhere; }
+    .status.error { color: #8e1d18; background: #fff0ee; }
+    .status.success { background: #eaf8ef; }
+    .bar { height: 14px; background: #e3ebe5; border-radius: 99px; overflow: hidden; margin: 14px 0 6px; }
+    .bar > i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #147843, #72df9b); transition: width .5s ease; }
+    .bar-meta { display: flex; justify-content: space-between; color: #53615a; font-size: .9rem; font-variant-numeric: tabular-nums; }
+    .steps { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 6px; }
+    .steps li { display: flex; gap: 10px; align-items: center; color: #8a968f; }
+    .steps li::before { content: "○"; width: 18px; text-align: center; }
+    .steps li.active { color: #17211d; font-weight: 700; }
+    .steps li.active::before { content: "●"; color: #147843; animation: pulse 1s infinite; }
+    .steps li.done { color: #147843; }
+    .steps li.done::before { content: "✓"; }
+    .log { margin: 16px 0 0; padding: 12px; max-height: 190px; overflow: auto; background: #f4f6f4; border-radius: 9px; font: .84rem/1.55 ui-monospace, monospace; color: #3c4a43; }
+    .log div { white-space: pre-wrap; overflow-wrap: anywhere; }
+    .viral { margin-top: 14px; color: #3c4a43; font-size: .92rem; line-height: 1.5; }
+    .preview { margin: 20px 0; }
+    .preview video { display: block; width: min(100%, 360px); max-height: 68vh; margin: 10px auto 0; background: #101612; border-radius: 12px; }
+    @keyframes pulse { 50% { opacity: .3; } }
+    .hidden { display: none; }
+    footer { color: #67746c; font-size: .88rem; margin-top: 18px; }
+    @media (max-width: 600px) { main { margin-top: 28px; } form, .result { padding: 20px; } .row { grid-template-columns: 1fr; gap: 0; } }
+  </style>
+</head>
+<body>
+  <header><strong>IMPULSO STONE</strong> <span> / REELS</span></header>
+  <main>
+    <h1>Monte seu Reel</h1>
+    <p class="intro">Escolha vídeos ou uma pasta do computador, selecione um formato e gere uma primeira versão para revisar.</p>
+    <form id="reel-form">
+      <label for="video-files">Escolha vídeos do computador</label>
+      <input id="video-files" name="video_files" type="file" accept=".mp4,.mov,.m4v,.webm,.mkv,video/*" multiple>
+      <small>Selecione vários arquivos de vídeo. Não há limite fixo de quantidade; cada vídeo pode ter até 500 MB.</small>
+      <label for="video-folder">Ou escolha uma pasta</label>
+      <input id="video-folder" name="video_folder" type="file" accept=".mp4,.mov,.m4v,.webm,.mkv,video/*" webkitdirectory directory multiple>
+      <small>O navegador pedirá acesso à pasta escolhida. Os vídeos encontrados nela e nas subpastas serão enviados para edição; outros tipos de arquivo serão ignorados. Cada vídeo pode ter até 500 MB.</small>
+      <div id="file-list" class="help" aria-live="polite"></div>
+
+      <details>
+        <summary>Ou use links diretos de vídeo</summary>
+        <label for="video-urls">Links dos vídeos</label>
+        <textarea id="video-urls" name="video_urls" placeholder="https://seu-site.com/video1.mp4&#10;https://seu-site.com/video2.mp4"></textarea>
+        <small>Um link público direto por linha. Links de páginas do YouTube, Drive, Instagram e TikTok não são aceitos.</small>
+      </details>
+
+      <label for="format">Formato do Reel</label>
+      <select id="format" name="format_id" required></select>
+      <small id="format-help"></small>
+
+      <div class="row">
+        <div>
+          <label for="business-name">Nome do negócio</label>
+          <input id="business-name" name="business_name" maxlength="100" placeholder="Ex.: Doces da Ana">
+        </div>
+        <div>
+          <label for="product">Produto ou serviço</label>
+          <input id="product" name="product" maxlength="120" placeholder="Ex.: bolo de cenoura">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="cnae">CNAE (opcional)</label>
+          <input id="cnae" name="cnae_code" maxlength="20" placeholder="Ex.: 5620-1/04">
+        </div>
+        <div>
+          <label for="cta">Canal de contato</label>
+          <input id="cta" name="cta_channel" maxlength="60" value="WhatsApp">
+        </div>
+      </div>
+
+      <label for="context">Contexto e mensagem principal</label>
+      <textarea id="context" name="context" maxlength="3000" placeholder="O que aparece nos vídeos? O que você quer que o público entenda ou sinta? Ex.: peças de crochê feitas à mão, mostrar os detalhes e convidar para encomendas."></textarea>
+      <small>Descreva os fatos e a intenção do Reel. O sistema não identifica com confiabilidade o conteúdo visual por conta própria. Se não escrever um roteiro abaixo, este texto será usado como locução quando a fala estiver ativada.</small>
+
+      <label for="custom-script">Roteiro da fala (opcional)</label>
+      <textarea id="custom-script" name="custom_script" maxlength="6000" placeholder="Escreva exatamente o que quer que seja falado. Se deixar vazio, será usado o texto do contexto; sem contexto, o sistema cria um roteiro-base."></textarea>
+      <small>Se preencher, este roteiro substitui o texto de locução gerado a partir do contexto.</small>
+
+      <label>Áudio do Reel</label>
+      <label class="check">
+        <input id="speech-enabled" name="speech_enabled" type="checkbox" checked>
+        <span>Adicionar fala/locução e legendas</span>
+      </label>
+      <label class="check">
+        <input id="music-enabled" name="music_enabled" type="checkbox" checked>
+        <span>Adicionar música de fundo (trilha enviada ou música automática)</span>
+      </label>
+      <label for="music-file">Sua trilha sonora (opcional)</label>
+      <input id="music-file" name="music_file" type="file" accept=".mp3,.wav,.m4a,.aac,.ogg,.flac,audio/*">
+      <small>Envie MP3, WAV, M4A, AAC, OGG ou FLAC de até 100 MB (máximo de 15 minutos). Com música ativada, o editor escolhe o trecho de maior energia e sincroniza os cortes às batidas detectadas. Sem arquivo, usa a trilha automática. Use apenas música cuja licença permita seu uso.</small>
+      <label class="check">
+        <input id="source-audio" name="keep_source_audio" type="checkbox">
+        <span>Manter o som original dos vídeos</span>
+      </label>
+      <small id="audio-help">Ative pelo menos uma opção de áudio. Se desligar fala e música, escolha manter o som original para haver áudio no arquivo final.</small>
+
+      <label class="check">
+        <input id="commercial" name="commercial" type="checkbox" checked>
+        <span>O Reel será usado comercialmente. O sistema aplicará as verificações de licença; provedores e vozes sujeitos a revisão podem exigir aprovação antes da publicação.</span>
+      </label>
+      <button id="submit" class="submit" type="submit">Gerar Reel</button>
+      <footer>Não há limite fixo de quantidade de vídeos. O envio e a renderização dependem do espaço livre em disco e dos recursos do computador. Arquivos selecionados são enviados ao servidor local para processamento.</footer>
+    </form>
+
+    <section id="result" class="result hidden" aria-live="polite">
+      <h2>Processamento</h2>
+      <p id="status" class="status"></p>
+      <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="bar-fill"></i></div>
+      <div class="bar-meta"><span id="bar-percent">0%</span><span id="bar-elapsed">0s</span></div>
+      <ol id="steps" class="steps"></ol>
+      <div id="log" class="log" aria-label="Histórico do processamento"></div>
+      <p id="viral" class="viral hidden"></p>
+      <div id="preview" class="preview hidden">
+        <h3>Prévia do seu Reel</h3>
+        <video id="reel-preview" controls playsinline preload="metadata">
+          Seu navegador não consegue reproduzir este vídeo.
+        </video>
+        <small>Assista à prévia e depois baixe o arquivo se estiver satisfeito.</small>
+      </div>
+      <a id="download" class="download hidden" href="#">Baixar Reel</a>
+    </section>
+  </main>
+  <script>
+    const form = document.querySelector("#reel-form");
+    const select = document.querySelector("#format");
+    const help = document.querySelector("#format-help");
+    const result = document.querySelector("#result");
+    const statusBox = document.querySelector("#status");
+    const button = document.querySelector("#submit");
+    const download = document.querySelector("#download");
+    const previewBox = document.querySelector("#preview");
+    const previewVideo = document.querySelector("#reel-preview");
+    const fileInput = document.querySelector("#video-files");
+    const folderInput = document.querySelector("#video-folder");
+    const fileList = document.querySelector("#file-list");
+    const urlInput = document.querySelector("#video-urls");
+    const musicFileInput = document.querySelector("#music-file");
+    const speechInput = document.querySelector("#speech-enabled");
+    const musicInput = document.querySelector("#music-enabled");
+    const sourceAudioInput = document.querySelector("#source-audio");
+    const audioHelp = document.querySelector("#audio-help");
+    const barFill = document.querySelector("#bar-fill");
+    const barPercent = document.querySelector("#bar-percent");
+    const barElapsed = document.querySelector("#bar-elapsed");
+    const barBox = document.querySelector(".bar");
+    const stepsList = document.querySelector("#steps");
+    const logBox = document.querySelector("#log");
+    const viralBox = document.querySelector("#viral");
+    let formats = [];
+    let stages = [];
+    let clientLog = [];
+
+    let highWater = 0;
+    function setProgress(percent, elapsed) {
+      const value = Math.max(highWater, Math.min(100, percent));
+      highWater = value;
+      barFill.style.width = `${value}%`;
+      barBox.setAttribute("aria-valuenow", Math.round(value));
+      barPercent.textContent = `${Math.round(value)}%`;
+      if (elapsed !== undefined) barElapsed.textContent = `${Math.floor(elapsed / 60)}min ${Math.round(elapsed % 60)}s`;
+    }
+
+    function renderSteps(current, done) {
+      stepsList.innerHTML = "";
+      const index = stages.findIndex(item => item.key === current);
+      stages.forEach((stage, i) => {
+        const li = document.createElement("li");
+        li.textContent = stage.label;
+        if (done || i < index) li.className = "done";
+        else if (i === index) li.className = "active";
+        stepsList.append(li);
+      });
+    }
+
+    function renderLog(events) {
+      logBox.innerHTML = "";
+      for (const event of events) {
+        const row = document.createElement("div");
+        row.textContent = `[${String(Math.floor(event.t / 60)).padStart(2, "0")}:${String(Math.round(event.t % 60)).padStart(2, "0")}] ${event.message}`;
+        logBox.append(row);
+      }
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function uploadFile(file, onProgress, kind = "video") {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `/api/uploads?${new URLSearchParams({filename: file.name, kind})}`);
+        xhr.setRequestHeader("Content-Type", "application/octet-stream");
+        xhr.upload.onprogress = event => event.lengthComputable && onProgress(event.loaded, event.total);
+        xhr.onerror = () => reject(new Error(`Falha de conexão ao enviar ${file.name}.`));
+        xhr.onload = () => {
+          let body = {};
+          try { body = JSON.parse(xhr.responseText); } catch (_) {}
+          xhr.status >= 200 && xhr.status < 300 ? resolve(body) : reject(new Error(body.error || `Falha ao enviar ${file.name}.`));
+        };
+        xhr.send(file);
+      });
+    }
+
+    function selectedVideoFiles() {
+      const source = fileInput.files.length ? fileInput.files : folderInput.files;
+      return [...source].filter(file => [".mp4", ".mov", ".m4v", ".webm", ".mkv"]
+        .includes(file.name.slice(file.name.lastIndexOf(".")).toLowerCase()));
+    }
+
+    function updateFiles() {
+      const files = selectedVideoFiles();
+      const source = fileInput.files.length ? fileInput : folderInput;
+      const skipped = source.files.length - files.length;
+      fileList.textContent = files.length
+        ? `${files.length} vídeo(s) encontrado(s): ${files.map(file => file.webkitRelativePath || file.name).join(", ")}${skipped ? ` · ${skipped} arquivo(s) não compatível(eis) serão ignorados.` : ""}`
+        : (source.files.length ? "Nenhum vídeo compatível encontrado na seleção." : "");
+      fileInput.required = false;
+      folderInput.required = false;
+      urlInput.required = files.length === 0;
+    }
+
+    function validateAudioChoices() {
+      const valid = speechInput.checked || musicInput.checked || sourceAudioInput.checked;
+      audioHelp.classList.toggle("status", !valid);
+      audioHelp.classList.toggle("error", !valid);
+      return valid;
+    }
+
+    function showStatus(message, state = "") {
+      result.classList.remove("hidden");
+      statusBox.textContent = message;
+      statusBox.className = `status ${state}`;
+    }
+
+    function updateFormatHelp() {
+      const current = formats.find(item => item.id === Number(select.value));
+      if (current) help.textContent = `${current.focus} · ${current.duration.min}–${current.duration.max} segundos.`;
+    }
+
+    async function loadFormats() {
+      const response = await fetch("/api/formats");
+      if (!response.ok) throw new Error("Não foi possível carregar os formatos.");
+      formats = await response.json();
+      for (const item of formats) {
+        const option = document.createElement("option");
+        option.value = item.id;
+        option.textContent = `${item.id}. ${item.name}`;
+        select.append(option);
+      }
+      select.value = "2";
+      updateFormatHelp();
+      stages = await (await fetch("/api/stages")).json();
+    }
+
+    async function watchJob(jobId) {
+      while (true) {
+        const response = await fetch(`/api/jobs/${jobId}`);
+        const job = await response.json();
+        if (!response.ok) throw new Error(job.error || "Não foi possível consultar o processamento.");
+        setProgress(job.percent || 0, job.elapsed_s);
+        renderSteps(job.stage, job.status === "done");
+        renderLog(job.events || []);
+        if (job.status === "error") throw new Error(job.error || "Falha ao gerar o Reel.");
+        showStatus(job.progress || job.status, job.status === "done" ? "success" : "");
+        if (job.status === "done") {
+          download.href = job.download_url;
+          download.classList.remove("hidden");
+          previewVideo.src = `/api/jobs/${jobId}/preview`;
+          previewVideo.load();
+          previewBox.classList.remove("hidden");
+          const v = job.viral;
+          if (v) {
+            viralBox.textContent = `Formato viral aplicado: ${v.shots} planos, ${v.first_3s_states} mudanças visuais nos 3 primeiros segundos, ` +
+              `${v.words_per_second} palavras/s na legenda, grade de batidas: ${v.beat_grid}.`;
+            viralBox.classList.remove("hidden");
+          }
+          showStatus(`Reel pronto.${job.audit?.passed ? " Auditoria técnica aprovada." : ""}`, "success");
+          return;
+        }
+        await new Promise(resolve => setTimeout(resolve, 700));
+      }
+    }
+
+    select.addEventListener("change", updateFormatHelp);
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files.length) folderInput.value = "";
+      updateFiles();
+    });
+    folderInput.addEventListener("change", () => {
+      if (folderInput.files.length) fileInput.value = "";
+      updateFiles();
+    });
+    [speechInput, musicInput, sourceAudioInput].forEach(input =>
+      input.addEventListener("change", validateAudioChoices));
+    urlInput.addEventListener("input", updateFiles);
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      button.disabled = true;
+      download.classList.add("hidden");
+      previewVideo.pause();
+      previewVideo.removeAttribute("src");
+      previewVideo.load();
+      previewBox.classList.add("hidden");
+      viralBox.classList.add("hidden");
+      highWater = 0;
+      setProgress(0, 0);
+      renderSteps("intake", false);
+      logBox.innerHTML = "";
+      try {
+        if (!validateAudioChoices()) {
+          throw new Error("Escolha fala, música ou o som original dos vídeos. O Reel precisa de ao menos uma faixa de áudio.");
+        }
+        const files = selectedVideoFiles();
+        const musicFile = musicInput.checked ? musicFileInput.files[0] : null;
+        const hasSelection = fileInput.files.length > 0 || folderInput.files.length > 0;
+        const urls = urlInput.value.trim();
+        if (files.length && urls) throw new Error("Escolha arquivos do computador ou use links, não os dois juntos.");
+        if (hasSelection && !files.length) throw new Error("A seleção não contém vídeos em formato compatível.");
+        if (!files.length && !urls) throw new Error("Escolha vídeos, uma pasta ou cole links diretos.");
+
+        const uploadIds = [];
+        const totalBytes = files.reduce((sum, file) => sum + file.size, 0) + (musicFile?.size || 0) || 1;
+        let sentBefore = 0;
+        const uploadStart = performance.now();
+        for (const [index, file] of files.entries()) {
+          if (file.size > 500 * 1024 * 1024) throw new Error(`${file.name} excede o limite de 500 MB.`);
+          showStatus(`Enviando vídeo ${index + 1} de ${files.length}: ${file.name}...`);
+          const upload = await uploadFile(file, (loaded) => {
+            const sent = sentBefore + loaded;
+            const seconds = (performance.now() - uploadStart) / 1000;
+            setProgress(10 * sent / totalBytes, seconds);
+            barPercent.textContent = `${Math.round(10 * sent / totalBytes)}% · enviado ${(sent / 1048576).toFixed(0)} de ${(totalBytes / 1048576).toFixed(0)} MB`;
+          });
+          sentBefore += file.size;
+          uploadIds.push(upload.upload_id);
+        }
+
+        let musicUploadId = null;
+        if (musicFile) {
+          if (musicFile.size > 100 * 1024 * 1024) throw new Error(`${musicFile.name} excede o limite de 100 MB.`);
+          showStatus(`Enviando trilha sonora: ${musicFile.name}...`);
+          const upload = await uploadFile(musicFile, loaded => {
+            const sent = sentBefore + loaded;
+            const seconds = (performance.now() - uploadStart) / 1000;
+            setProgress(10 * sent / totalBytes, seconds);
+            barPercent.textContent = `${Math.round(10 * sent / totalBytes)}% · enviado ${(sent / 1048576).toFixed(0)} de ${(totalBytes / 1048576).toFixed(0)} MB`;
+          }, "music");
+          musicUploadId = upload.upload_id;
+        }
+
+        showStatus("Preparando a geração do Reel...");
+        const data = {
+          video_urls: urls,
+          upload_ids: uploadIds,
+          format_id: Number(select.value),
+          business_name: document.querySelector("#business-name").value,
+          product: document.querySelector("#product").value,
+          cnae_code: document.querySelector("#cnae").value,
+          cta_channel: document.querySelector("#cta").value,
+          context: document.querySelector("#context").value,
+          custom_script: document.querySelector("#custom-script").value,
+          speech_enabled: speechInput.checked,
+          music_enabled: musicInput.checked,
+          music_upload_id: musicUploadId,
+          keep_source_audio: sourceAudioInput.checked,
+          commercial: document.querySelector("#commercial").checked
+        };
+        const response = await fetch("/api/jobs", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(data)
+        });
+        const job = await response.json();
+        if (!response.ok) throw new Error(job.error || "Não foi possível iniciar o Reel.");
+        await watchJob(job.job_id);
+      } catch (error) {
+        showStatus(error.message, "error");
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    loadFormats().catch(error => showStatus(error.message, "error"));
+  </script>
+</body>
+</html>

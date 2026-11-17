@@ -1,0 +1,83 @@
+# =============================================================================
+# Guardrail jurídico (Spec 02) — fonte de verdade das licenças de motores,
+# pesos e ativos. O validador lê este arquivo.
+#
+# commercial_ok:
+#   true     -> liberado
+#   false    -> BLOQUEADO: levanta CommercialLicenseViolationError quando o
+#               render é comercial (padrão: commercial=True)
+#   agpl     -> bloqueado salvo REELS_ALLOW_AGPL=1 (decisão humana, ver ADR-006)
+#   review   -> liberado, MAS gera aviso no render_report.json e item na seção
+#               automática de docs/HUMAN_DEPENDENCIES.md (revisão jurídica)
+#
+# Itens marcados "verify: true" foram classificados pela spec sem confirmação
+# primária. O agente DEVE ler o arquivo LICENSE / MODEL_CARD quando baixar o
+# pacote/peso e corrigir aqui (com ADR) se divergir.
+# =============================================================================
+version: 1
+
+blocked_sources_explicit:      # nomes que o schema de render recusa em modo comercial
+  - elevenlabs-free
+  - epidemicsound-free
+  - freesound
+  - soundstripe-trial
+
+entries:
+  # --- Bloqueados (pesquisa, ADR-005) ---
+  elevenlabs-free:        {kind: tts_service, license: "ToS plano Free",           commercial_ok: false}
+  epidemicsound-free:     {kind: music_service, license: "ToS plano Free (prototipagem)", commercial_ok: false}
+  freesound:              {kind: sfx_service, license: "ToS API: uso não-comercial", commercial_ok: false}
+  soundstripe-trial:      {kind: music_service, license: "Trial com marca d'água",  commercial_ok: false}
+
+  # --- Voz ---
+  edge-tts:               {kind: tts_service, license: "biblioteca LGPL-3.0; serviço Microsoft não documentado", commercial_ok: review, verify: true,
+                           note: "A pesquisa trata como comercialmente seguro; não há concessão explícita de uso comercial do endpoint. Revisão jurídica."}
+  kokoro-82m:             {kind: tts_weights, license: "Apache-2.0", commercial_ok: true, verify: true}
+  piper-voice-pt_BR-faber-medium: {kind: tts_weights, license: "ver MODEL_CARD (pesquisa: CC0)", commercial_ok: review, verify: true}
+  piper-tts:              {kind: tts_engine, license: "MIT (rhasspy/piper) / GPL-3.0 (piper1-gpl)", commercial_ok: true, verify: true,
+                           note: "Uso como binário/CLI separado; a saída de áudio não herda a licença do código."}
+  espeak-ng:              {kind: tts_engine, license: "GPL-3.0 (binário separado)", commercial_ok: true, verify: true}
+  cloudflare-melotts:     {kind: tts_service, license: "MelotTTS MIT via Workers AI", commercial_ok: true, verify: true}
+  placeholder_tone:       {kind: test_only, license: "gerado pelo projeto", commercial_ok: false,
+                           note: "Nunca em render comercial."}
+
+  # --- ASR ---
+  whisperx:               {kind: asr_engine, license: "BSD-2-Clause", commercial_ok: true, verify: true}
+  faster-whisper:         {kind: asr_engine, license: "MIT", commercial_ok: true}
+  openai-whisper-weights: {kind: asr_weights, license: "MIT", commercial_ok: true}
+  wav2vec2-pt-align:      {kind: asr_weights, license: "ver MODEL_CARD do modelo de alinhamento PT", commercial_ok: review, verify: true}
+  silero-vad:             {kind: vad, license: "MIT", commercial_ok: true}
+
+  # --- Visão ---
+  ultralytics-yolo11:     {kind: vision_weights, license: "AGPL-3.0", commercial_ok: agpl,
+                           note: "Desligado por padrão. Usar MediaPipe/Haar/saliência. Ver ADR-006."}
+  mediapipe:              {kind: vision_engine, license: "Apache-2.0", commercial_ok: true}
+  opencv:                 {kind: vision_engine, license: "Apache-2.0", commercial_ok: true}
+  scenedetect:            {kind: vision_engine, license: "BSD-3-Clause", commercial_ok: true}
+  depth-anything-v2-small: {kind: depth_weights, license: "Apache-2.0", commercial_ok: true, verify: true}
+  depth-anything-v2-base: {kind: depth_weights, license: "CC-BY-NC-4.0", commercial_ok: false}
+  depth-anything-v2-large: {kind: depth_weights, license: "CC-BY-NC-4.0", commercial_ok: false}
+  qwen2.5-vl-7b:          {kind: vlm_weights, license: "Apache-2.0", commercial_ok: true, verify: true}
+  llama-3.2:              {kind: llm_weights, license: "Llama 3.2 Community License (condicional)", commercial_ok: review, verify: true}
+
+  # --- Música / MIR ---
+  librosa:                {kind: mir, license: "ISC", commercial_ok: true}
+  madmom-code:            {kind: mir, license: "BSD-3-Clause", commercial_ok: true}
+  madmom-models:          {kind: mir_weights, license: "CC-BY-NC-SA-4.0", commercial_ok: false,
+                           note: "Modelos pré-treinados do madmom são não-comerciais. Padrão = librosa. Ver ADR-006."}
+  essentia:               {kind: mir, license: "AGPL-3.0", commercial_ok: agpl}
+  pixabay-content:        {kind: music_asset, license: "Pixabay Content License", commercial_ok: true,
+                           note: "Rejeitar faixas marcadas com Content ID; salvar certificado de licença."}
+  procedural-music:       {kind: music_asset, license: "gerado pelo projeto", commercial_ok: true}
+  local-cc0:              {kind: music_asset, license: "CC0-1.0", commercial_ok: true}
+
+  # --- Vídeo generativo (opcional) ---
+  ltx-video:              {kind: i2v_weights, license: "LTX-Video Open Weights License", commercial_ok: review, verify: true}
+  wan-2.x:                {kind: i2v_weights, license: "Apache-2.0", commercial_ok: true, verify: true}
+
+  # --- Render / legendas / fontes ---
+  ffmpeg:                 {kind: render, license: "LGPL-2.1 / GPL-2.0+ com libx264", commercial_ok: true,
+                           note: "Uso interno OK. Distribuição empacotada: revisar (ADR-006)."}
+  pysubs2:                {kind: subtitles, license: "MIT", commercial_ok: true}
+  montserrat:             {kind: font, license: "SIL OFL-1.1", commercial_ok: true}
+  dejavu:                 {kind: font, license: "Bitstream Vera / DejaVu (livre)", commercial_ok: true}

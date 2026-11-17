@@ -1,0 +1,194 @@
+# =============================================================================
+# Cascata de provedores do ZeroCostCascadeRouter (Spec 02)
+#
+# Limites e nomes de modelos foram copiados da pesquisa (out–nov/2026) e
+# PODEM ESTAR DESATUALIZADOS. Regras:
+#  - Nenhum nome de modelo de nuvem é hardcoded no código: ler daqui.
+#  - Quando houver chave, o router DEVE confirmar o modelo via endpoint
+#    /models do provedor (quando existir) e cair para o próximo modelo da
+#    lista `models` se o primeiro não estiver disponível.
+#  - Tier 3 (local) é SEMPRE o último recurso e NUNCA exige chave.
+#  - `trains_on_free_inputs: true` => provedor bloqueado quando
+#    contains_sensitive_data=True (circuit breaker de privacidade).
+#  - Ausência de env var obrigatória => tier pulado silenciosamente e
+#    registrado em docs/HUMAN_DEPENDENCIES.md (seção automática).
+# =============================================================================
+version: 1
+
+defaults:
+  sensitive_by_default_for_user_media: true    # vídeos/fotos/áudios do MEI
+  http_timeout_s: 30
+  edge_tts_latency_budget_s: 3.0               # > 3 s => comuta para local
+  switch_budget_ms: 500                        # 429 -> próximo tier em < 500 ms (testado)
+  cache:
+    dir: .cache/router
+    min_ttl_hours: 24
+    key: sha256(modality + provider + model + normalized_params + input_digest)
+
+modalities:
+  asr:
+    tiers:
+      - id: groq_whisper
+        tier: 1
+        env: [GROQ_API_KEY]
+        endpoint: https://api.groq.com/openai/v1/audio/transcriptions
+        models: [whisper-large-v3-turbo, whisper-large-v3]
+        limits: {rpm: 20, rpd: 2000, audio_seconds_per_hour: 7200, audio_seconds_per_day: 28800, max_file_mb: 25}
+        ratelimit_headers: [x-ratelimit-remaining-requests, x-ratelimit-remaining-tokens, retry-after]
+        trains_on_free_inputs: false
+        post_align_local_wav2vec2: true        # timestamps por palavra corrigidos localmente quando disponível
+      - id: cloudflare_whisper
+        tier: 2
+        env: [CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID]
+        endpoint: https://api.cloudflare.com/client/v4/accounts/{CLOUDFLARE_ACCOUNT_ID}/ai/run/{model}
+        models: ["@cf/openai/whisper-large-v3-turbo", "@cf/openai/whisper"]
+        limits: {neurons_per_day: 10000, neurons_per_audio_minute: {"@cf/openai/whisper-large-v3-turbo": 46.63, "@cf/openai/whisper": 41.14}}
+        trains_on_free_inputs: false
+      - id: local_whisperx
+        tier: 3
+        env: []
+        engines_in_order: [whisperx, faster_whisper, none]   # "none" => transcript vazio + aviso, pipeline continua
+        model_size_cpu: small                                # DEFAULT-SPEC (large-v3 só com GPU / HAS_CUDA=1)
+        model_size_gpu: large-v3
+
+  tts:
+    tiers:
+      - id: edge_tts
+        tier: 1
+        env: []
+        package: edge-tts
+        voices: [pt-BR-FranciscaNeural, pt-BR-AntonioNeural, pt-BR-ThalitaMultilingualNeural]
+        produces_word_timestamps: true
+        license_key: edge-tts                               # ver licenses.yaml (revisão jurídica)
+      - id: cloudflare_melotts
+        tier: 2
+        env: [CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID]
+        models: ["@cf/myshell-ai/melotts"]
+        produces_word_timestamps: false
+      - id: local_kokoro
+        tier: 3
+        env: []
+        package: kokoro-onnx
+        voices: [pf_dora, pm_alex, pm_santa]
+        license_key: kokoro-82m
+      - id: local_piper
+        tier: 3
+        env: []
+        model_path_env: PIPER_MODEL_PATH                    # default: models/piper/pt_BR-faber-medium.onnx
+        license_key: piper-voice-pt_BR-faber-medium
+      - id: local_espeak_ng
+        tier: 4
+        env: []
+        note: "Último recurso offline (qualidade baixa). Marca o render como 'degraded_voice'."
+        license_key: espeak-ng
+      - id: placeholder_tone
+        tier: 5
+        env: [REELS_ALLOW_PLACEHOLDER_AUDIO]
+        note: "SÓ para CI/teste sem nenhum TTS. Gera fala sintética tonal; nunca usar em produção."
+
+  llm:
+    tiers:
+      - id: groq_chat
+        tier: 1
+        env: [GROQ_API_KEY]
+        endpoint: https://api.groq.com/openai/v1/chat/completions
+        models: [openai/gpt-oss-120b, openai/gpt-oss-20b, qwen/qwen3.8-27b]
+        limits: {rpm: 30, rpd: 1000, tpm: 8000, tpd: 200000}
+        long_prompt_threshold_tokens: 6000                  # acima disso, desvia para tier com TPM alto
+        trains_on_free_inputs: false
+      - id: gemini_flash
+        tier: 1
+        env: [GEMINI_API_KEY]
+        endpoint: https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent
+        models: [gemini-3.8-flash, gemini-3.6-flash, gemini-3.5-flash-lite]
+        quota_scope: per_project
+        trains_on_free_inputs: true                         # bloqueado para dados sensíveis
+      - id: mistral
+        tier: 2
+        env: [MISTRAL_API_KEY]
+        endpoint: https://api.mistral.ai/v1/chat/completions
+        models: [mistral-small-latest]
+        limits: {rpm: 2, tpm: 500000}
+        trains_on_free_inputs: unknown                      # tratar como true até humano confirmar
+      - id: cerebras
+        tier: 2
+        env: [CEREBRAS_API_KEY]
+        endpoint: https://api.cerebras.ai/v1/chat/completions
+        models: [gpt-oss-120b]
+        limits: {rpm: 5, tpm: 30000, tpd: 1000000}
+        trains_on_free_inputs: unknown
+      - id: openrouter_free
+        tier: 2
+        env: [OPENROUTER_API_KEY]
+        endpoint: https://openrouter.ai/api/v1/chat/completions
+        models: ["openrouter/free-model-placeholder:free"]  # agente: descobrir via /api/v1/models filtrando ':free'
+        limits: {rpm: 20, rpd: 50}
+        trains_on_free_inputs: unknown
+      - id: ollama_local
+        tier: 3
+        env: []
+        endpoint: http://localhost:11434/v1/chat/completions
+        models: [llama3.2, qwen2.5-coder]
+      - id: template_engine
+        tier: 4
+        env: []
+        note: "Sem nenhum LLM: preenche config/script_templates.yaml deterministicamente. Garante autonomia total."
+
+  vlm:
+    tiers:
+      - id: gemini_flash_vision
+        tier: 1
+        env: [GEMINI_API_KEY]
+        models: [gemini-3.8-flash, gemini-3.6-flash]
+        trains_on_free_inputs: true
+      - id: nvidia_nim
+        tier: 2
+        env: [NVIDIA_API_KEY]
+        endpoint: https://integrate.api.nvidia.com/v1/chat/completions
+        models: [nvidia/nemotron-3.5-super-vl-120b-a12b]
+        trains_on_free_inputs: unknown
+      - id: cloudflare_vision
+        tier: 2
+        env: [CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID]
+        models: ["@cf/meta/llama-3.2-11b-vision-instruct"]
+        trains_on_free_inputs: false
+      - id: ollama_qwen_vl
+        tier: 3
+        env: []
+        endpoint: http://localhost:11434/v1/chat/completions
+        models: ["qwen2.5vl:latest"]
+      - id: heuristic_only
+        tier: 4
+        env: []
+        note: "Sem VLM: componente V do score de gancho = 0 e pesos renormalizados."
+
+  animation:
+    tiers:
+      - id: local_2_5d
+        tier: 1
+        env: []
+        note: "Padrão determinístico (deformação zero). Ver ADR-003."
+      - id: hf_zerogpu_i2v
+        tier: 2
+        env: [HF_TOKEN]
+        opt_in_env: REELS_ENABLE_ZEROGPU          # desligado por padrão; só B-roll atmosférico, nunca produto
+        spaces: [Lightricks/ltx-video-distilled]
+        limits: {gpu_seconds_per_day: 300}
+        reserve_rule: "nunca chamar se quota_local_restante < duration declarada do endpoint"
+
+  music:
+    tiers:
+      - id: pixabay
+        tier: 1
+        env: [PIXABAY_API_KEY]
+        status: unverified                         # a API pública documentada cobre imagens/vídeos; confirmar se há endpoint de música
+        cache_min_hours: 24
+        reject_content_id_flagged: true
+      - id: local_cc0_library
+        tier: 2
+        env: []
+        dir: assets/audio_cc0
+      - id: procedural_generator
+        tier: 3
+        env: []
+        note: "Gera trilha própria (numpy) com BPM conhecido — licença do próprio projeto. Garante autonomia."

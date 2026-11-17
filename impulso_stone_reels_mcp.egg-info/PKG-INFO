@@ -1,0 +1,36 @@
+Metadata-Version: 2.4
+Name: impulso-stone-reels-mcp
+Version: 0.1.0
+Summary: Offline-first MCP server and CLI for producing vertical Reels
+Requires-Python: <3.13,>=3.11
+Provides-Extra: core
+Requires-Dist: mcp<2,>=1.12; extra == "core"
+Requires-Dist: pydantic>=2; extra == "core"
+Requires-Dist: pyyaml; extra == "core"
+Requires-Dist: httpx; extra == "core"
+Requires-Dist: python-dotenv; extra == "core"
+Requires-Dist: numpy; extra == "core"
+Requires-Dist: pillow; extra == "core"
+Requires-Dist: opencv-python-headless; extra == "core"
+Requires-Dist: scenedetect[opencv]; extra == "core"
+Requires-Dist: librosa; extra == "core"
+Requires-Dist: soundfile; extra == "core"
+Requires-Dist: pysubs2; extra == "core"
+Requires-Dist: edge-tts<8,>=7; extra == "core"
+Requires-Dist: scikit-image; extra == "core"
+Requires-Dist: static-ffmpeg; extra == "core"
+Provides-Extra: ml
+Requires-Dist: faster-whisper; extra == "ml"
+Requires-Dist: whisperx; extra == "ml"
+Requires-Dist: torch; extra == "ml"
+Requires-Dist: transformers; extra == "ml"
+Requires-Dist: mediapipe; extra == "ml"
+Requires-Dist: kokoro-onnx; extra == "ml"
+Requires-Dist: piper-tts; extra == "ml"
+Provides-Extra: agpl
+Requires-Dist: ultralytics; extra == "agpl"
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: pytest-asyncio; extra == "dev"
+Requires-Dist: respx; extra == "dev"
+Requires-Dist: ruff; extra == "dev"

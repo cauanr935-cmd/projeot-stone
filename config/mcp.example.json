@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "impulso-stone-reels": {
+      "command": "/CAMINHO/ABSOLUTO/impulso-stone-reels-mcp/.venv/bin/python",
+      "args": ["-m", "src.mcp_server"],
+      "cwd": "/CAMINHO/ABSOLUTO/impulso-stone-reels-mcp",
+      "env": {
+        "PYTHONPATH": "/CAMINHO/ABSOLUTO/impulso-stone-reels-mcp",
+        "REELS_WORKSPACE": "/CAMINHO/ABSOLUTO/impulso-stone-reels-mcp/workspace"
+      }
+    }
+  }
+}

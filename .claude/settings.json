@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Edit",
+      "Write",
+      "Read",
+      "Glob",
+      "Grep",
+      "WebSearch",
+      "WebFetch",
+      "Bash(python *)",
+      "Bash(python3 *)",
+      "Bash(.venv/bin/python *)",
+      "Bash(pip *)",
+      "Bash(pip3 *)",
+      "Bash(uv *)",
+      "Bash(pytest *)",
+      "Bash(ruff *)",
+      "Bash(ffmpeg *)",
+      "Bash(ffprobe *)",
+      "Bash(bash scripts/*)",
+      "Bash(git init*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git status*)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(ls *)",
+      "Bash(mkdir *)",
+      "Bash(cp *)",
+      "Bash(mv *)",
+      "Bash(which *)",
+      "Bash(env *)",
+      "Bash(du *)",
+      "Bash(df *)",
+      "Bash(nvidia-smi*)",
+      "Bash(ollama *)",
+      "Bash(hf *)",
+      "Bash(huggingface-cli *)",
+      "Bash(curl -fsSL *)",
+      "Bash(curl -L *)",
+      "Bash(apt-get install *)",
+      "Bash(sudo apt-get install *)",
+      "Bash(fc-cache *)",
+      "Bash(fc-list *)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Bash(cat .env*)",
+      "Bash(git push *)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~*)"
+    ]
+  },
+  "env": {
+    "PYTHONUNBUFFERED": "1",
+    "REELS_WORKSPACE": "./workspace",
+    "REELS_COMMERCIAL": "1"
+  }
+}

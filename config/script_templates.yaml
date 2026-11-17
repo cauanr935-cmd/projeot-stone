@@ -1,0 +1,64 @@
+# =============================================================================
+# Roteiros padrão PT-BR por formato (tier 4 do LLM: "template_engine").
+# Garante que o pipeline gere um Reel completo SEM nenhuma API.
+#
+# Tom de voz Impulso Stone (relatório @impulsostone): próximo, acolhedor,
+# educativo, encorajador; linguagem simples e direta; sem jargão e SEM
+# promessas exageradas. Público: 70,5% feminino, 35–54 anos = 47,5%.
+#
+# Regras validadas por schema (Spec 06/07):
+#  - `hook_overlay`: texto na tela no Frame Zero, <= 5 palavras.
+#  - Cada segmento tem `text`; a soma de palavras deve caber na duração do
+#    segmento a ~2,6–3,2 palavras/s de fala (TTS a +5%/+10%).
+#  - Formato 5 (AIDA): `loop_tail` termina sem pontuação e completa a
+#    primeira frase (`segments.atencao.text`).
+#  - Slots: {negocio}, {servico}, {produto}, {cta_canal}. Defaults abaixo.
+#  - Quando um LLM estiver disponível, ele pode reescrever os textos para o
+#    CNAE/produto real, mas a saída passa pelas mesmas validações.
+# =============================================================================
+version: 1
+
+slot_defaults:
+  negocio: "nosso cantinho"
+  servico: "esse serviço"
+  produto: "esse produto"
+  cta_canal: "WhatsApp"
+
+formats:
+  1:  # BAB — beleza
+    hook_overlay: "Olha como ela chegou"
+    segments:
+      antes:  "Olha como ela chegou aqui. Fio sem brilho, pontas ressecadas e aquela vontade de esconder tudo num coque."
+      depois: "Agora olha o resultado. Fio alinhado, brilho de verdade e um sorriso diferente no espelho. Foi cuidado com calma e produto certo."
+      ponte:  "O segredo é o diagnóstico antes de qualquer química. Cada cabelo pede um caminho."
+      cta:    "Agende pelo {cta_canal}. Aceito Pix."
+  2:  # Product Demo + PAS — alimentação
+    hook_overlay: "Olha essa textura"
+    segments:
+      feature_hook: "Olha essa textura. Saiu agora do forno."
+      walkthrough:  "Massa batida na hora, recheio generoso e cobertura feita do zero. Cada etapa com calma, do jeito que tem que ser."
+      diferencial:  "Nada de mistura pronta. Ingrediente fresco e porção caprichada."
+      prova_cta:    "Quem prova sempre volta. Encomende pelo {cta_canal}."
+  3:  # UGC Testimonial — varejo/moda
+    hook_overlay: "Preciso te mostrar isso"
+    segments:
+      gancho_pessoal: "Preciso te mostrar isso."
+      contexto:       "Sabe quando você procura uma peça que vista bem e caiba no bolso, e nunca acha?"
+      descoberta:     "Aqui no {negocio} cada peça é escolhida a dedo. Olha esse caimento, esse tecido, esses detalhes. Serve pro trabalho e pro fim de semana."
+      recomendacao:   "Eu indico de olhos fechados. Chama no {cta_canal} e pede o seu tamanho."
+  4:  # PAS — serviços técnicos
+    hook_overlay: "Isso aqui é perigo"
+    segments:
+      problema: "Isso aqui é perigo. Fio derretido na tomada."
+      agitacao: "Parece pouca coisa, mas é assim que começa um curto-circuito. Aparelho queimado, conta mais cara e risco de incêndio dentro de casa."
+      solucao:  "Troquei a fiação, instalei o disjuntor certo e testei ponto por ponto. Serviço limpo."
+      cta:      "Orçamento rápido pelo {cta_canal}."
+  5:  # AIDA — ensino/fitness/serviços locais
+    hook_overlay: "Ninguém te conta isso"
+    segments:
+      atencao:   "Ninguém te conta isso: treinar todo dia não é o segredo."
+      interesse: "O que muda o jogo é constância com descanso. Três treinos bem feitos na semana valem mais do que sete feitos no cansaço."
+      desejo:    "Imagina ter energia pra trabalhar, cuidar da casa e ainda sobrar disposição no fim do dia. É isso que um plano simples, feito pra sua rotina, entrega. Sem academia cara e sem promessa milagrosa."
+      acao_loop: "Me chama no {cta_canal} e monta o seu plano comigo. Salva esse vídeo, porque"
+    loop_tail: "Salva esse vídeo, porque"
+    loop_connectors_allowed: ["porque", "afinal", "e", "já que", "pois"]

@@ -1,0 +1,162 @@
+# =============================================================================
+# FONTE ÚNICA DE VERDADE — 5 formatos de Reel mapeados na pesquisa
+# (docs/reference/ARQUITETURA_PESQUISA.md, seção "Adaptação Setorial").
+#
+# REGRAS PARA OS AGENTES:
+#  - Todo código (resources MCP, diretor criativo, montador, testes) DEVE ler
+#    estes valores daqui. É proibido duplicar números mágicos no código.
+#  - Os testes de aceitação também conferem estes valores contra a pesquisa.
+#    Alterar um número aqui sem ADR justificando = violação de contrato.
+#  - Campos marcados "# DEFAULT-SPEC" não foram definidos pela pesquisa; foram
+#    escolhidos pela spec e podem ser recalibrados com ADR.
+# =============================================================================
+version: 1
+
+common:
+  output:
+    width: 1080
+    height: 1920
+    fps: 30
+    vcodec: h264
+    pix_fmt: yuv420p
+    acodec: aac
+    sample_rate: 48000
+    audio_bitrate: 192k
+    loudness_target_lufs: -14.0      # DEFAULT-SPEC (faixa aceita: -24 a -10)
+    duration_tolerance_s: 0.5        # tolerância de encoder sobre duration.max
+  pads:
+    seamless: 0.090                  # preserva ~180 ms (janela AST longa) — Dost & Huang (2026)
+    overlapping: 0.015               # comprime pausa para < 40 ms — Dost & Huang (2026)
+  audio_microfade_s: 0.015           # afade in/out em cada junção
+  punch_in_zoom: [1.0, 1.08]         # alternância a cada corte
+  hook:                              # Swipe Zone — pesquisa, "Ciência da Retenção" (>=3 mudanças nos 3 s iniciais)
+    swipe_zone_s: 3.0
+    swipe_zone_min_states: 3         # DEFAULT-SPEC: corte+punch-in nos 3 primeiros segundos
+    min_shot_s: 0.6                  # DEFAULT-SPEC: plano mínimo após encaixe na batida
+  subtitles:
+    style_name: ImpulsoKaraoke
+    font: Montserrat ExtraBold
+    font_fallback: DejaVu Sans Bold
+    font_size: 68
+    max_words_per_event: 4
+    frame_zero_window_ms: 3000
+    frame_zero_max_words: 5
+    words_per_second_target: [5, 10] # recomendação TikTok Creative Center (soft, ver ADR-004)
+    words_per_second_hard_max: 10
+    active_word_tag: '{\c&H34C9FC&\fscx112\fscy112}'
+    reset_tag: '{\c&HFFFFFF&\fscx100\fscy100}'
+    margin_v: 350
+  cut_frequency_reference:           # Dost & Huang (2026), N=242
+    low_p16: 0.189
+    median_p50: 0.331
+    high_p84: 0.517
+  music:
+    ducking_db: -14                  # DEFAULT-SPEC: atenuação da trilha durante voz
+    bed_level_db: -20                # DEFAULT-SPEC: nível da trilha sem voz
+
+formats:
+  - id: 1
+    key: bab
+    name: "BAB (Before-After-Bridge)"
+    focus: "Beleza, Estética e Transformação Visual"
+    canonical_cnae: "9602-5/01"
+    duration: {target: 30, min: 28, max: 30}
+    segments:
+      - {name: antes,  label: "Antes",  start: 0,  end: 8,  role: before,  beat_aligned: false}
+      - {name: depois, label: "Depois", start: 8,  end: 20, role: after,   beat_aligned: true, align_to: downbeat}
+      - {name: ponte,  label: "Ponte",  start: 20, end: 27, role: bridge,  beat_aligned: false}
+      - {name: cta,    label: "CTA WhatsApp/Pix", start: 27, end: 30, role: cta, beat_aligned: false}
+    cut_style: seamless
+    target_cuts_per_sec: 0.517
+    silence: {noise_db: -32, min_silence_dur: 0.40}
+    reframe: {preset: talking_head, zoom: [1.05, 1.85], split_screen_compare: true}
+    animation: {mode: parallax_2_5d, parallax_strength: 6, pivot: PIVOT_CENTER_BOX, handheld_sway: false}  # DEFAULT-SPEC p/ fotos
+    tts: {voice: pt-BR-FranciscaNeural, rate: "+10%", kokoro_voice: pf_dora, piper_model: pt_BR-faber-medium}
+    music: {beat_sync: downbeats}
+    seamless_loop: false
+    cta_default: "Agende pelo WhatsApp. Aceito Pix."
+
+  - id: 2
+    key: product_demo_pas
+    name: "Product Demo + PAS"
+    focus: "Alimentação, Confeitaria e Gastronomia"
+    canonical_cnae: "5620-1/04"
+    duration: {target: 30, min: 15, max: 30}
+    segments:
+      - {name: feature_hook, label: "Feature Hook (alta textura)", start: 0,  end: 5,  role: feature_hook, beat_aligned: false}
+      - {name: walkthrough,  label: "Passo a passo na batida",     start: 5,  end: 18, role: walkthrough,  beat_aligned: true, align_to: beat}
+      - {name: diferencial,  label: "Diferencial",                 start: 18, end: 24, role: differential, beat_aligned: false}
+      - {name: prova_cta,    label: "Prova + CTA",                 start: 24, end: 30, role: proof_cta,    beat_aligned: false}
+    cut_style: seamless
+    target_cuts_per_sec: 0.331
+    silence: {noise_db: -32, min_silence_dur: 0.40}
+    reframe: {preset: movie, zoom: [1.0, 1.3], split_screen_compare: false}
+    animation: {mode: parallax_2_5d, parallax_strength: 10, pivot: PIVOT_CENTER_BOX, handheld_sway: false}
+    tts: {voice: pt-BR-ThalitaMultilingualNeural, rate: "+10%", kokoro_voice: pf_dora, piper_model: pt_BR-faber-medium}
+    music: {beat_sync: downbeats}
+    seamless_loop: false
+    cta_default: "Encomende pelo WhatsApp."
+
+  - id: 3
+    key: ugc_testimonial
+    name: "UGC Testimonial Flow"
+    focus: "Comércio Varejista, Moda, Vestuário e Artesanato"
+    canonical_cnae: "4781-4/00"
+    duration: {target: 30, min: 21, max: 35}
+    segments:
+      - {name: gancho_pessoal, label: "Gancho pessoal",           start: 0,  end: 4,  role: personal_hook,  beat_aligned: false}
+      - {name: contexto,       label: "Contexto",                 start: 4,  end: 12, role: context,        beat_aligned: false}
+      - {name: descoberta,     label: "Descoberta / Peças",       start: 12, end: 22, role: discovery,      beat_aligned: true, align_to: beat}
+      - {name: recomendacao,   label: "Recomendação casual",      start: 22, end: 30, role: recommendation, beat_aligned: false}
+    cut_style: seamless
+    target_cuts_per_sec: 0.331
+    silence: {noise_db: -32, min_silence_dur: 0.40}
+    reframe: {preset: talking_head, zoom: [1.05, 1.85], split_screen_compare: false}
+    animation: {mode: optical_flow_morph, parallax_strength: 6, pivot: PIVOT_CENTER_BOX, handheld_sway: true}
+    tts: {voice: pt-BR-ThalitaMultilingualNeural, rate: "+5%", kokoro_voice: pf_dora, piper_model: pt_BR-faber-medium}  # rate DEFAULT-SPEC
+    music: {beat_sync: beats}
+    seamless_loop: false
+    cta_default: "Chama no WhatsApp e pede o seu."
+
+  - id: 4
+    key: pas
+    name: "PAS (Problem-Agitate-Solution)"
+    focus: "Serviços Técnicos, Reparos, Construção e Logística"
+    canonical_cnae: "4321-5/00"
+    duration: {target: 30, min: 20, max: 30}
+    segments:
+      - {name: problema, label: "Defeito real",        start: 0,  end: 5,  role: problem,  beat_aligned: false}
+      - {name: agitacao, label: "Risco / Agitação",    start: 5,  end: 18, role: agitate,  beat_aligned: false}
+      - {name: solucao,  label: "Execução limpa",      start: 18, end: 25, role: solution, beat_aligned: false}
+      - {name: cta,      label: "Orçamento rápido",    start: 25, end: 30, role: cta,      beat_aligned: false}
+    cut_style: overlapping
+    target_cuts_per_sec: 0.331
+    silence: {noise_db: -32, min_silence_dur: 0.40}
+    reframe: {preset: cars, zoom: [1.0, 1.3], split_screen_compare: false}
+    animation: {mode: parallax_2_5d, parallax_strength: 6, pivot: PIVOT_CENTER_BOX, handheld_sway: false}  # DEFAULT-SPEC p/ fotos
+    tts: {voice: pt-BR-AntonioNeural, rate: "+10%", kokoro_voice: pm_alex, piper_model: pt_BR-faber-medium}
+    music: {beat_sync: none}
+    seamless_loop: false
+    cta_default: "Orçamento rápido pelo WhatsApp."
+
+  - id: 5
+    key: aida
+    name: "AIDA (Attention-Interest-Desire-Action)"
+    focus: "Ensino, Fitness, Pets e Serviços Locais"
+    canonical_cnae: "8599-6/99"
+    duration: {target: 45, min: 35, max: 45}
+    segments:
+      - {name: atencao,   label: "Afirmação contraintuitiva", start: 0,  end: 5,  role: attention,   beat_aligned: false}
+      - {name: interesse, label: "Dica prática",              start: 5,  end: 18, role: interest,    beat_aligned: false}
+      - {name: desejo,    label: "Benefício",                 start: 18, end: 35, role: desire,      beat_aligned: false}
+      - {name: acao_loop, label: "CTA + Seamless Loop",       start: 35, end: 45, role: action_loop, beat_aligned: false}
+    cut_style: seamless
+    target_cuts_per_sec: 0.331                                   # DEFAULT-SPEC (pesquisa não fixa; usa mediana)
+    silence: {noise_db: -32, min_silence_dur: 0.40}              # remove pausas > 0,4 s deixando ~0,2 s
+    reframe: {preset: talking_head, zoom: [1.05, 1.85], split_screen_compare: false}
+    animation: {mode: parallax_2_5d, parallax_strength: 6, pivot: PIVOT_CENTER_BOX, handheld_sway: false}  # DEFAULT-SPEC p/ fotos
+    tts: {voice: pt-BR-FranciscaNeural, rate: "+5%", kokoro_voice: pf_dora, piper_model: pt_BR-faber-medium}  # DEFAULT-SPEC
+    music: {beat_sync: beats}
+    seamless_loop: true
+    loop_rule: "A última frase termina com conector sem pontuação final e se completa sintaticamente com a primeira frase dos 0–3 s."
+    cta_default: "Me chama no WhatsApp."

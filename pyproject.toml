@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "impulso-stone-reels-mcp"
+version = "0.1.0"
+description = "Offline-first MCP server and CLI for producing vertical Reels"
+requires-python = ">=3.11,<3.13"
+dependencies = []
+
+[project.optional-dependencies]
+core = [
+  "mcp>=1.12,<2", "pydantic>=2", "pyyaml", "httpx", "python-dotenv",
+  "numpy", "pillow", "opencv-python-headless", "scenedetect[opencv]",
+  "librosa", "soundfile", "pysubs2", "edge-tts>=7,<8",
+  "scikit-image", "static-ffmpeg"
+]
+ml = [
+  "faster-whisper", "whisperx", "torch", "transformers",
+  "mediapipe", "kokoro-onnx", "piper-tts"
+]
+agpl = ["ultralytics"]
+dev = ["pytest", "pytest-asyncio", "respx", "ruff"]
+
+[tool.setuptools.packages.find]
+include = ["src*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = ["slow: media processing tests", "network: network-dependent tests", "gpu: GPU-dependent tests"]
+
+[tool.ruff]
+line-length = 120
