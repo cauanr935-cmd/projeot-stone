@@ -23,6 +23,8 @@
 - **Principal:** `score_relativo` (taxa_eng ÷ mediana do perfil); **secundária:** `taxa_eng` do case — ambas em `ranking.parquet`.
 - **Alto desempenho:** top 10% (`config/coleta.yaml › ranking.top_fracao`) **por plataforma**, entre posts aptos:
   curtidas visíveis e perfil com ≥ 5 Reels aptos (`min_reels_perfil`; com n=1 o score é 1.0 por construção).
-- **Resultado (18/11/2026):** 690 aptos → 69 no top (23 perfis); 79 fora por curtidas ocultas e 7 por perfil com poucos
-  Reels. Os dois rankings coincidem em 39 dos 69 posts. Scores > 20 são sinalizados (`score_extremo`, 27 posts), não removidos.
-- Todos os 69 do top têm vídeo baixado, e há 185 vídeos de comparação para a amostra aleatória da Fase 5.
+- **Resultado (18/11/2026, após lote 3):** 1.504 aptos → 151 no top (48 perfis); 155 fora por curtidas ocultas e 13 por
+  perfil com poucos Reels. Os dois rankings coincidem em 80 dos 151 posts. Scores > 20 são sinalizados
+  (`score_extremo`, 70 posts), não removidos.
+- **Lote 3:** 42 perfis (US$ ~3,7). Base final **1.672 Reels de 76 perfis**, abaixo da meta de 2.000 (crédito esgotado).
+- A mídia do top global é completada a partir do cache bruto enquanto as URLs não expiram (~1 dia).

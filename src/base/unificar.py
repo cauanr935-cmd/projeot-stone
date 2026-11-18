@@ -87,7 +87,7 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--dados", default=cfg["saida_padrao"])
     ap.add_argument("--saida", default=None)
-    ap.add_argument("--lotes", default="instagram,instagram_lote2", help="prefixos dos lotes, em ordem de prioridade")
+    ap.add_argument("--lotes", default="instagram,instagram_lote2,instagram_lote3", help="prefixos dos lotes, em ordem de prioridade")
     args = ap.parse_args(argv)
     configure_logging()
 
@@ -112,9 +112,16 @@ def main(argv: list[str] | None = None) -> int:
 
     posts, excluidos = construir_base(lotes, excl, janela_dias=cfg["base"]["janela_dias"],
                                       idade_minima_dias=cfg["instagram"]["idade_minima_dias"])
-    csvs = [pd.read_csv(p) for p in (cfg["perfis_csv"], cfg["perfis_csv"].replace(".csv", "_lote2.csv")) if Path(p).exists()]
+    base_csv = cfg["perfis_csv"].replace(".csv", "")
+    csvs = [pd.read_csv(p) for p in (f"{base_csv}.csv", f"{base_csv}_lote2.csv", f"{base_csv}_lote3.csv") if Path(p).exists()]
     perfis = tabela_perfis(pd.concat(csvs, ignore_index=True), pd.concat(perfis_raw, ignore_index=True)
                            .drop_duplicates("username"), posts, excluidos)
+
+    # fonte de verdade da mídia: o que existe em disco (vídeos baixados depois da coleta também contam)
+    pasta = dados / "midia" / "instagram"
+    tem = posts["post_id"].map(lambda i: (pasta / str(i) / "video.mp4").exists()).astype("boolean")
+    posts["video_ok"] = tem.where(tem | posts["video_ok"].notna(), other=pd.NA).where(~tem, other=True)
+    posts.loc[tem, "pasta_midia"] = posts.loc[tem, "post_id"].map(lambda i: str(pasta / str(i)))
 
     posts.to_parquet(saida / "posts.parquet", index=False)
     perfis.to_parquet(saida / "perfis.parquet", index=False)

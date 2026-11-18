@@ -84,7 +84,7 @@ Nenhuma conta de rede social é necessária para gerar o `.mp4`.
 | ID | Prioridade | Spec | O que o humano precisa fazer | Por quê / impacto se não fizer | Fallback ativo hoje | Como verificar depois |
 |---|---|---|---|---|---|---|
 | H-CASE-01 | JURÍDICO | Case | Confirmar com a organização do case (Stone/Inteli) que a coleta de Reels via actors do Apify é a rota de extração combinada no kickoff de 26/10/2026 e que o uso da mídia baixada é só para análise interna | O TAPI coloca fora do escopo qualquer scraping que viole os Termos de Serviço das plataformas | Base já coletada; mídia não é versionada nem redistribuída | Resposta registrada em `docs/base_de_dados.md` §1 |
-| H-CASE-02 | OPCIONAL | Case | Aumentar o crédito do Apify (ou aguardar a renovação mensal em 17/12/2026) para ampliar a base de 776 para 2.000+ Reels e cobrir perfis truncados | A meta do TAPI é 2.000–5.000 publicações; o teto de US$ 5/mês limitou o volume | Análises com `confidence_flag` para suportes baixos | `python -m src.base.unificar` e conferir `docs/base_de_dados.md` §2 |
+| H-CASE-02 | OPCIONAL | Case | Aumentar o crédito do Apify (ou aguardar a renovação mensal em 17/12/2026; a conta atual renova em 17/12/2026) para ampliar a base de 1.672 para 2.000+ Reels e cobrir perfis truncados | A meta do TAPI é 2.000–5.000 publicações; o teto de US$ 5/mês limitou o volume | Análises com `confidence_flag` para suportes baixos | `python -m src.base.unificar` e conferir `docs/base_de_dados.md` §2 |
 
 ---
 
