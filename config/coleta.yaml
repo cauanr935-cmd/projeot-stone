@@ -45,3 +45,8 @@ descoberta:
 
 base:
   janela_dias: 365             # atividade nos últimos 12 meses (TAPI)
+
+ranking:
+  top_fracao: 0.10             # alto desempenho = top 10% por score_relativo (TAPI)
+  min_reels_perfil: 5          # com poucos reels a mediana do perfil não é estável (n=1 dá score 1.0)
+  score_extremo: 20            # sinaliza (não remove) outliers de score_relativo
