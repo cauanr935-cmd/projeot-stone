@@ -1,22 +1,22 @@
 # Análise do top 10% de Reels — padrões e formatos (Fase 5)
 
-**Data:** 18/11/2026 · **Base:** 1.672 Reels de 76 perfis · **Amostra analisada:** 151 Reels do top 10% (48 perfis), 80 de consenso.
+**Data:** 18/11/2026 · **Base:** 1.843 Reels de 86 perfis (lote 4 incluído) · **Amostra analisada:** 168 Reels do top 10% (55 perfis), 92 de consenso.
 
 ## Achados
 - **Nenhum formato se destaca estatisticamente:** os intervalos de confiança (95%, bootstrap da mediana do `score_relativo`) se sobrepõem em todos os pares.
-  Com n = 151 e rótulos estimados, a análise descreve o top 10%, não prova que um formato vence outro.
-- **Retrato do top 10%:** duração mediana de 52 s, cerca de 171 palavras por minuto e apenas ~1 corte de cena por minuto, em Reels falados e com rosto
-  (115 de 151 têm rosto em ≥ 60% dos frames). A 1ª palavra costuma começar em 0 s: o gancho é falado de imediato.
-- **Formato dominante:** `ugc_testimonial` (54 Reels, 36%), seguido de BAB (29), PAS (28), AIDA (24) e Product Demo + PAS (16). O rótulo UGC é o mais
+  Com n = 168 e rótulos estimados, a análise descreve o top 10%, não prova que um formato vence outro.
+- **Retrato do top 10%:** duração mediana de 57 s, cerca de 166 palavras por minuto e apenas ~1 corte de cena por minuto, em Reels falados e com rosto
+  (127 de 168 têm rosto em ≥ 60% dos frames). A 1ª palavra costuma começar em 0 s: o gancho é falado de imediato.
+- **Formato dominante:** `ugc_testimonial` (58 Reels, 35%), seguido de BAB (34), PAS (34), AIDA (26) e Product Demo + PAS (16). O rótulo UGC é o mais
   frágil, porque as regras reagem a primeira pessoa ("eu", "minha").
-- **Contas grandes** são só 9 dos 151 Reels, então o recorte por porte é praticamente descritivo.
+- **Contas grandes** são só 9 dos 168 Reels, então o recorte por porte é praticamente descritivo.
 
 ## Limitações
-- 19 dos 151 Reels não têm trilha de áudio; a classificação deles usa só a legenda do post (12 Reels ficaram com confiança baixa).
+- 19 dos 168 Reels não têm trilha de áudio; a classificação deles usa só a legenda do post (13 Reels ficaram com confiança baixa).
 - Os 5 formatos são frameworks de copy; o classificador é um léxico determinístico, sem verdade de campo para validar. O refinamento por LLM local
   (`--ollama`) existe, mas não foi usado nesta rodada.
 - `score_relativo` extremo (> 20) é comum no top 10% e puxa as médias; use a mediana e o IQR.
-- `score_relativo_rolling` não foi implementado (depende da expansão da base).
+- `score_relativo_rolling` não foi implementado (depende de uma base maior).
 
 ## Tabelas
 

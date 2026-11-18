@@ -87,7 +87,7 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--dados", default=cfg["saida_padrao"])
     ap.add_argument("--saida", default=None)
-    ap.add_argument("--lotes", default="instagram,instagram_lote2,instagram_lote3", help="prefixos dos lotes, em ordem de prioridade")
+    ap.add_argument("--lotes", default="instagram,instagram_lote2,instagram_lote3,instagram_lote4", help="prefixos dos lotes, em ordem de prioridade")
     args = ap.parse_args(argv)
     configure_logging()
 
@@ -113,7 +113,7 @@ def main(argv: list[str] | None = None) -> int:
     posts, excluidos = construir_base(lotes, excl, janela_dias=cfg["base"]["janela_dias"],
                                       idade_minima_dias=cfg["instagram"]["idade_minima_dias"])
     base_csv = cfg["perfis_csv"].replace(".csv", "")
-    csvs = [pd.read_csv(p) for p in (f"{base_csv}.csv", f"{base_csv}_lote2.csv", f"{base_csv}_lote3.csv") if Path(p).exists()]
+    csvs = [pd.read_csv(p) for p in (f"{base_csv}.csv", f"{base_csv}_lote2.csv", f"{base_csv}_lote3.csv", f"{base_csv}_lote4.csv") if Path(p).exists()]
     perfis = tabela_perfis(pd.concat(csvs, ignore_index=True), pd.concat(perfis_raw, ignore_index=True)
                            .drop_duplicates("username"), posts, excluidos)
 

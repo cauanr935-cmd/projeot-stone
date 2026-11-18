@@ -50,8 +50,10 @@ def saldo_usd(client) -> float:
     return float(d["limits"]["max_monthly_usage_usd"]) - float(d["current"]["monthly_usage_usd"])
 
 
-def checar_orcamento(client, teto_usd: float, reserva_usd: float = 0.5) -> None:
+def checar_orcamento(client, teto_usd: float, reserva_usd: float | None = None) -> None:
     """Aborta se o teto do run + reserva não couber no saldo — nunca estoura os créditos."""
+    if reserva_usd is None:
+        reserva_usd = float(os.getenv("APIFY_RESERVA_USD", "0.5"))
     saldo = saldo_usd(client)
     if teto_usd + reserva_usd > saldo:
         raise SystemExit(f"orçamento insuficiente: teto US$ {teto_usd:.2f} + reserva US$ {reserva_usd:.2f} "

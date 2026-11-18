@@ -27,6 +27,7 @@
   perfil com poucos Reels. Os dois rankings coincidem em 80 dos 151 posts. Scores > 20 são sinalizados
   (`score_extremo`, 70 posts), não removidos.
 - **Lote 3:** 42 perfis (US$ ~3,7). Base final **1.672 Reels de 76 perfis**, abaixo da meta de 2.000 (crédito esgotado).
+- **Lote 4 (18/11/2026, scraping liberado pelo usuário):** 12 perfis de MPE ainda não coletados, 307 Reels recebidos (23 de dono diferente excluídos; 182 com 14+ dias), custo ~US$ 0,79 com teto de US$ 0,8. Base **1.843 Reels de 86 perfis na base**; 1.671 aptos → **168 no top 10% (55 perfis), 92 de consenso**; 1.139 excluídos. Para usar o saldo restante, a reserva do guardrail ficou configurável (`APIFY_RESERVA_USD`, padrão 0,50; usada 0,03). Ainda abaixo da meta de 2.000.
 - A mídia do top global é completada a partir do cache bruto enquanto as URLs não expiram (~1 dia).
 
 ## Fase 5 — análise do top 10% (18/11/2026)

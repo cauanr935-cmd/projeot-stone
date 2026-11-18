@@ -17,8 +17,8 @@
 - **Data da coleta:** 18/11/2026 (UTC; todos os lotes em 17–18/11/2026).
 - **Período dos posts:** 18/11/2025 a 04/11/2026 (janela de 12 meses,
   só posts com ≥ 14 dias na coleta).
-- **Volume final:** **1672 Reels de 76 perfis** (1517 aptos
-  ao ranking; 155 com curtidas ocultas). Mídia baixada: 393 vídeos.
+- **Volume final:** **1843 Reels de 86 perfis** (1688 aptos
+  ao ranking; 155 com curtidas ocultas). Mídia baixada: 562 vídeos.
 - **Meta do TAPI:** 2.000 a 5.000 publicações de ≥ 30 perfis. Atingimos o número de perfis, **não** o volume: o teto foi o
   crédito gratuito do Apify (US$ 5/mês).
 
@@ -34,20 +34,20 @@ Perfis com poucos seguidores ou bio sem relação com MPE foram descartados.
 
 | tamanho | tipo_conta | reels | perfis |
 |---|---|---|---|
-| grande | criador | 53 | 4 |
+| grande | criador | 54 | 5 |
 | grande | marca | 96 | 6 |
-| medio | criador | 320 | 16 |
+| medio | criador | 370 | 19 |
 | medio | marca | 173 | 8 |
-| pequeno | criador | 968 | 39 |
-| pequeno | marca | 62 | 3 |
+| pequeno | criador | 1042 | 43 |
+| pequeno | marca | 108 | 5 |
 
 **Perfis por segmento (em Reels na base):**
 
 | segmento | reels | perfis |
 |---|---|---|
 | contabilidade | 336 | 15 |
-| gestao_financeira | 248 | 10 |
-| contabilidade_mei | 232 | 11 |
+| gestao_financeira | 323 | 14 |
+| contabilidade_mei | 269 | 14 |
 | gestao_empresarial | 143 | 5 |
 | educacao_empreendedora | 132 | 6 |
 | alimentacao_delivery | 120 | 4 |
@@ -58,12 +58,14 @@ Perfis com poucos seguidores ou bio sem relação com MPE foram descartados.
 | gestao_ferramentas | 54 | 2 |
 | vendas_ecommerce | 47 | 2 |
 | empreendedorismo_startups | 34 | 1 |
+| economia_negocios | 31 | 1 |
+| empreendedorismo | 28 | 2 |
 | varejo | 22 | 1 |
 | precificacao_confeitaria | 10 | 1 |
 | ideias_de_negocio | 2 | 2 |
 | servicos_juridicos_financeiros | 1 | 1 |
 
-## 4. Perfis na base (76)
+## 4. Perfis na base (86)
 | username | tamanho | tipo_conta | segmento | seguidores | n_reels_base |
 |---|---|---|---|---|---|
 | infinitepay | grande | marca | bancos_fintechs | 2466443 | 15 |
@@ -73,14 +75,17 @@ Perfis com poucos seguidores ou bio sem relação com MPE foram descartados.
 | laertejr_mkt | grande | criador | ideias_de_negocio | 983208 | 1 |
 | pagbank | grande | marca | bancos_fintechs | 888981 | 4 |
 | serasa | grande | marca | bancos_fintechs | 823295 | 18 |
+| nayradelduca | grande | criador | contabilidade_mei | 782969 | 1 |
 | sicoob | grande | marca | bancos_fintechs | 581094 | 14 |
 | sebraesp | grande | marca | educacao_empreendedora | 517169 | 32 |
 | larice_ | grande | criador | precificacao | 503651 | 29 |
 | nuvemshop | medio | marca | vendas_ecommerce | 489108 | 12 |
 | anajords | medio | criador | vendas_marketing | 399124 | 9 |
+| vitoresprega | medio | criador | empreendedorismo | 396248 | 25 |
 | rodrigofinancas | medio | criador | gestao_financeira | 376143 | 28 |
 | chefamandasimao | medio | criador | precificacao_confeitaria | 336400 | 10 |
 | contaazul | medio | marca | gestao_ferramentas | 334105 | 20 |
+| rogertoshi | medio | criador | gestao_financeira | 306271 | 22 |
 | ideiasquepagam25 | medio | criador | ideias_de_negocio | 240999 | 1 |
 | joaododelivery | medio | criador | alimentacao_delivery | 223839 | 22 |
 | wjrconsulting | medio | criador | gestao_financeira | 212908 | 25 |
@@ -97,15 +102,18 @@ Perfis com poucos seguidores ou bio sem relação com MPE foram descartados.
 | carlosrochap | medio | criador | contabilidade | 84868 | 21 |
 | carlaandradeconfeitaria | medio | criador | alimentacao_delivery | 78282 | 32 |
 | cont.dm | medio | marca | contabilidade | 69396 | 27 |
+| thioliveira.oficial | medio | criador | empreendedorismo | 67104 | 3 |
 | wmaciel.oficial | medio | criador | gestao_empresarial | 66164 | 36 |
 | mpfempresas | medio | criador | gestao_financeira | 60097 | 9 |
 | fiscalsemprejuizo | medio | criador | contabilidade_mei | 55627 | 31 |
 | vivendodepresentes | pequeno | criador | artesanato_varejo | 47794 | 28 |
 | eduardodetomini | pequeno | criador | precificacao | 46660 | 26 |
+| raphael_belloni | pequeno | criador | gestao_financeira | 43583 | 28 |
 | tributos_simples_nacional | pequeno | criador | contabilidade | 43247 | 33 |
 | daniel.startups | pequeno | criador | empreendedorismo_startups | 40882 | 34 |
 | lelnobrega | pequeno | criador | gestao_financeira | 37051 | 32 |
 | contabilidadesfree | pequeno | criador | contabilidade | 33435 | 35 |
+| nexoeconomia | pequeno | marca | economia_negocios | 32262 | 31 |
 | bsuguino | pequeno | criador | contabilidade_mei | 31106 | 27 |
 | cassia.feitosa.contadora | pequeno | criador | contabilidade | 25345 | 28 |
 | paulinhosanttoos | pequeno | criador | vendas_marketing | 24320 | 9 |
@@ -124,15 +132,19 @@ Perfis com poucos seguidores ou bio sem relação com MPE foram descartados.
 | kenia.contadora | pequeno | criador | contabilidade_mei | 7392 | 30 |
 | delyciasdapri | pequeno | criador | alimentacao_delivery | 7100 | 31 |
 | jocelaniocosta | pequeno | criador | contabilidade | 6351 | 30 |
+| giovannaesanttos | pequeno | criador | contabilidade_mei | 5807 | 21 |
 | lleticiasantos | pequeno | criador | contabilidade_mei | 5683 | 15 |
 | dominguesemotaconsultoria | pequeno | criador | gestao_financeira | 5666 | 34 |
 | ribinosites | pequeno | criador | vendas_marketing | 5385 | 14 |
 | scvconsultoriaemgestao | pequeno | criador | gestao_empresarial | 4585 | 29 |
+| granapratica13 | pequeno | criador | gestao_financeira | 4507 | 13 |
 | impulsostone | pequeno | marca | educacao_empreendedora | 4283 | 22 |
 | erick.rossine | pequeno | criador | vendas_ecommerce | 4188 | 35 |
 | gabybutzke.cont | pequeno | criador | contabilidade | 4129 | 36 |
 | topmeiconsultoria.20 | pequeno | criador | contabilidade_mei | 3980 | 33 |
 | elicelma_contabil | pequeno | criador | contabilidade_mei | 3948 | 2 |
+| estelia.mei | pequeno | criador | gestao_financeira | 3811 | 12 |
+| ideale_contabilidade | pequeno | marca | contabilidade_mei | 3767 | 15 |
 | bettynaoficial | pequeno | criador | gestao_financeira | 3754 | 35 |
 | ionaraklsantos | pequeno | criador | gestao_financeira | 3315 | 34 |
 | nathaliasantoscontabil | pequeno | criador | contabilidade | 2959 | 21 |
@@ -143,7 +155,7 @@ Perfis com poucos seguidores ou bio sem relação com MPE foram descartados.
 | contadoratainaraparanhos | pequeno | criador | contabilidade_mei | 1165 | 35 |
 | moyrafinancas | pequeno | criador | gestao_financeira | 1154 | 14 |
 
-**Perfis coletados que ficaram sem Reels elegíveis (7):**
+**Perfis coletados que ficaram sem Reels elegíveis (9):**
 
 | username | tamanho | tipo_conta | n_reels_excluidos |
 |---|---|---|---|
@@ -154,16 +166,18 @@ Perfis com poucos seguidores ou bio sem relação com MPE foram descartados.
 | welitonmengali | pequeno | criador | 36 |
 | resultoconsultoria1 | medio | criador | 1 |
 | pedrodellanora | medio | criador | 33 |
+| pablovelasques | pequeno | criador | 3 |
+| rendup365 | pequeno | criador | 11 |
 
 ## 5. Posts excluídos e por quê
-Total de posts excluídos: **1003** (detalhe linha a linha em `excluidos.parquet`).
+Total de posts excluídos: **1139** (detalhe linha a linha em `excluidos.parquet`).
 
 | motivo | posts | por quê |
 |---|---|---|
-| colaboracao_dono_diferente | 167 | Reel da grade do perfil, mas de outra conta (seguidores não são do dono) |
+| colaboracao_dono_diferente | 190 | Reel da grade do perfil, mas de outra conta (seguidores não são do dono) |
 | fora_do_foco_reels | 42 | carrossel ou imagem (piloto do @impulsostone); a base é só de Reels |
-| fora_janela_12m | 21 | publicado há mais de 12 meses da data da coleta (fora da janela de atividade) |
-| menos_14_dias | 773 | publicado há menos de 14 dias na data da coleta (métricas não estabilizadas) |
+| fora_janela_12m | 32 | publicado há mais de 12 meses da data da coleta (fora da janela de atividade) |
+| menos_14_dias | 875 | publicado há menos de 14 dias na data da coleta (métricas não estabilizadas) |
 
 ## 6. Limitações
 1. **Seguidores na data da coleta, não na do post.** `taxa_eng` usa o número atual; perfis que cresceram ou encolheram
@@ -171,12 +185,12 @@ Total de posts excluídos: **1003** (detalhe linha a linha em `excluidos.parquet
 2. **Viés de sobrevivência e de seleção.** Só vemos perfis que ainda existem e que achamos (hashtag + curadoria).
    Quem parou de postar ou apagou conteúdo fica de fora.
 3. **Viés de descoberta por hashtag:** os criadores achados já apareciam em buscas de MPE (provavelmente mais engajados).
-4. **Curtidas ocultas:** 155 Reels (9%) não têm curtidas;
+4. **Curtidas ocultas:** 155 Reels (8%) não têm curtidas;
    ficam na base mas **fora do ranking**.
 5. **Cobertura limitada por perfil:** o scraper devolve os Reels mais recentes (teto de ~35 por perfil). Em perfis que
    postam muito, a janela efetiva é bem menor que 12 meses. Perfis possivelmente truncados:
-   impulsostone, sebraesp, rodrigofinancas, chefamandasimao, dicasdeliverymelhor, carlosrochap, cassia.feitosa.contadora, yagolopesconsultor, brunameyercon, contabilidadesfree, _aislasantos, bettynaoficial, erick.rossine, contadoragabrielly_, contadoratainaraparanhos, larissa.brandao.adv, ideiasquepagam25, monick_cosmeticos2, cobraai.app, daniel.startups, mei.semcontador, milenaf.contadora, nathaliasantoscontabil, ionaraklsantos, topmeiconsultoria.20, gabybutzke.cont, scvconsultoriaemgestao, dominguesemotaconsultoria, jocelaniocosta, delyciasdapri, kenia.contadora, madelaine_doces, souminha.gestao, marlondomingoscontador, prismacontabilidademg, welitonmengali, paulinhosanttoos, lelnobrega, eduardodetomini, vivendodepresentes, fiscalsemprejuizo, wmaciel.oficial, scrapdalika, gustavosaballoscontador, karinasouza.pro, welbertandradee, mitjunior, joaododelivery, larice_, laertejr_mkt, moyrafinancas.
-6. **Desbalanceamento:** a base é dominada por contabilidade e por contas pequenas; só 149 Reels vêm de
+   impulsostone, sebraesp, rodrigofinancas, chefamandasimao, dicasdeliverymelhor, carlosrochap, cassia.feitosa.contadora, yagolopesconsultor, brunameyercon, contabilidadesfree, _aislasantos, bettynaoficial, erick.rossine, contadoragabrielly_, contadoratainaraparanhos, larissa.brandao.adv, ideiasquepagam25, monick_cosmeticos2, cobraai.app, daniel.startups, mei.semcontador, milenaf.contadora, nathaliasantoscontabil, ionaraklsantos, topmeiconsultoria.20, gabybutzke.cont, scvconsultoriaemgestao, dominguesemotaconsultoria, jocelaniocosta, delyciasdapri, kenia.contadora, madelaine_doces, souminha.gestao, marlondomingoscontador, prismacontabilidademg, welitonmengali, paulinhosanttoos, lelnobrega, eduardodetomini, vivendodepresentes, fiscalsemprejuizo, wmaciel.oficial, scrapdalika, gustavosaballoscontador, karinasouza.pro, welbertandradee, mitjunior, joaododelivery, larice_, laertejr_mkt, moyrafinancas, granapratica13, raphael_belloni, nexoeconomia.
+6. **Desbalanceamento:** a base é dominada por contabilidade e por contas pequenas; só 150 Reels vêm de
    contas grandes e há apenas **1** criador grande. Perfis com poucos Reels geram `score_relativo` instável.
 7. **Métricas de 14 dias:** posts mais novos foram excluídos; ainda assim as métricas não são finais.
 8. **Visualizações:** `views` = `videoPlayCount` (inclui replays); não são comparáveis a "alcance único".

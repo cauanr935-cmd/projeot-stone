@@ -128,6 +128,8 @@ def main(argv: list[str] | None = None) -> int:
     posts = pd.read_parquet(base / "posts.parquet").set_index("post_id")
     rows = []
     for sc, f in feats.items():
+        if sc not in man:  # saiu do top 10% após reranqueamento (cache de features antigo)
+            continue
         p = posts.loc[sc]
         texto = f"{p['legenda'] or ''}\n{f['transcript_text']}"
         fmt, scores, conf = classificar_regras(texto, f)
