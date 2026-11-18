@@ -65,7 +65,7 @@ def gerar(base: Path) -> str:
   só posts com ≥ {cfg['instagram']['idade_minima_dias']} dias na coleta).
 - **Volume final:** **{len(posts)} Reels de {posts['username'].nunique()} perfis** ({int(posts['elegivel_ranking'].sum())} aptos
   ao ranking; {int(posts['curtidas_ocultas'].sum())} com curtidas ocultas). Mídia baixada: {int(posts['video_ok'].fillna(False).sum())} vídeos.
-- **Meta do TAPI:** 2.000 a 5.000 publicações de ≥ 30 perfis. Atingimos o número de perfis, **não** o volume: o teto foi o
+- **Meta do TAPI:** 2.000 a 5.000 publicações de ≥ 30 perfis. {"Meta atingida" if len(posts) >= 2000 and posts['username'].nunique() >= 30 else "Meta **não** atingida"}: {len(posts)} Reels de {posts['username'].nunique()} perfis. O teto de volume é o
   crédito gratuito do Apify (US$ 5/mês).
 
 ## 3. Critérios de seleção dos perfis

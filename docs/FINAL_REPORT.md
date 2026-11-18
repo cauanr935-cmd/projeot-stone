@@ -54,12 +54,12 @@ Piper não foram instalados; nenhum modelo pesado foi baixado.
 
 ## Atualização 18/11/2026 — case de análise de Reels para MPEs
 
-- **Base:** 1.843 Reels de 86 perfis após o lote 4 (meta do TAPI de 2.000+ não atingida; faltam ~157, H-CASE-03). 1.671 aptos ao ranking;
-  168 no top 10% de 55 perfis; 92 de consenso entre `score_relativo` e `taxa_eng`; 1.139 posts excluídos.
-- **Análise do top 10%:** 168 vídeos (os novos do lote 4 baixados do cache bruto); transcrição local (faster-whisper small int8), cortes, frames e rosto;
+- **Base:** 2.715 Reels de 126 perfis após os lotes 5 e 6 (meta do TAPI de 2.000+ e ≥ 30 perfis **atingida**). 2.500 aptos ao ranking;
+  250 no top 10% de 82 perfis; 143 de consenso entre `score_relativo` e `taxa_eng`; 1.596 posts excluídos.
+- **Análise do top 10%:** 250 vídeos (os novos baixados do cache bruto com `src.analise.baixar_top`); transcrição local (faster-whisper small int8), cortes, frames e rosto;
   classificação nos 5 formatos por regras. Resultado e limitações em `docs/ANALISE_TOP10.md`: nenhum formato se destaca com significância.
-  Retrato do top: ~57 s, ~166 palavras/min, ~1 corte/min, rosto presente.
+  Retrato do top: ~54 s, ~172 palavras/min, ~1,2 corte/min, rosto presente.
 - **TTS:** Kokoro-82M local (Apache-2.0) substitui o edge-tts como padrão (ADR-010). Pendência jurídica: GPL do `phonemizer`/espeak-ng.
 - **Documentação:** ADR-009 corrigido (1.672, não 776) e ADR-010 novo; dossiê `docs/COMPLIANCE_H_CASE_01.md` com minuta para a organização.
-- **Desvios da proposta de custo zero:** sem a Etapa 2 (expansão); detector de rosto YuNet no lugar de Haar; áudio decodificado via ffmpeg por
+- **Desvios da proposta de custo zero:** expansão feita só com o Apify gratuito (descoberta por hashtag + coleta por perfil, lotes 5–6; US$ ~4,5); detector de rosto YuNet no lugar de Haar; áudio decodificado via ffmpeg por
   incompatibilidade do `av`; `score_relativo_rolling`, Ollama/VLM e sherpa-onnx não implementados.

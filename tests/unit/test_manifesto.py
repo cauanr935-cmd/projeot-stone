@@ -28,5 +28,9 @@ def test_video_valido(tmp_path):
 def test_manifesto_real():
     from src.analise.manifesto import construir_manifesto
     m = construir_manifesto(BASE)
-    assert len(m["itens"]) == m["total_top10"] == 151 and not m["faltando"]
-    assert len({i["shortcode"] for i in m["itens"]}) == 151 and m["consenso"] == 80
+    import pandas as pd
+    rank = pd.read_parquet(BASE / "ranking.parquet")
+    n = int(rank["alto_desempenho"].sum())  # o tamanho do top 10% cresce a cada lote
+    assert len(m["itens"]) == m["total_top10"] == n and not m["faltando"]
+    assert len({i["shortcode"] for i in m["itens"]}) == n
+    assert m["consenso"] == int(rank.loc[rank["alto_desempenho"], "alto_desempenho_taxa_eng"].sum())

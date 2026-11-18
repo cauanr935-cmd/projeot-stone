@@ -28,6 +28,7 @@
   (`score_extremo`, 70 posts), não removidos.
 - **Lote 3:** 42 perfis (US$ ~3,7). Base final **1.672 Reels de 76 perfis**, abaixo da meta de 2.000 (crédito esgotado).
 - **Lote 4 (18/11/2026, scraping liberado pelo usuário):** 12 perfis de MPE ainda não coletados, 307 Reels recebidos (23 de dono diferente excluídos; 182 com 14+ dias), custo ~US$ 0,79 com teto de US$ 0,8. Base **1.843 Reels de 86 perfis na base**; 1.671 aptos → **168 no top 10% (55 perfis), 92 de consenso**; 1.139 excluídos. Para usar o saldo restante, a reserva do guardrail ficou configurável (`APIFY_RESERVA_USD`, padrão 0,50; usada 0,03). Ainda abaixo da meta de 2.000.
+- **Lotes 5 e 6 (18/11/2026, nova chave Apify, autorizada pelo usuário):** nova descoberta por 8 hashtags (contabilidademei, abrirmei, dicasparamei, fluxodecaixa, marketingparapequenasempresas, vendasonline, empreendedorafeminina, gestaodenegocios; 240 Reels; US$ ~0,5), 70+45 perfis verificados pela bio e 43 curados. Lote 5: 28 perfis, 984 Reels (695 com 14+ dias); lote 6: 15 perfis, 287 Reels (192 com 14+ dias), teto de US$ 0,8. Base final **2.715 Reels de 126 perfis** (meta do TAPI atingida); top 10% = 250. Foco mantido: contabilidade/MEI, gestão financeira, precificação, vendas e bancos/fintechs para MPE.
 - A mídia do top global é completada a partir do cache bruto enquanto as URLs não expiram (~1 dia).
 
 ## Fase 5 — análise do top 10% (18/11/2026)

@@ -39,5 +39,8 @@ def test_classificacao_real_fecha_contagens():
     if not p.exists():
         pytest.skip("análise local (gitignored) ausente")
     rows = json.loads(p.read_text())
-    assert len(rows) == 151 and sum(r["is_consensus_80"] for r in rows) == 80
+    import pandas as pd
+    rank = pd.read_parquet("dados/base/ranking.parquet")
+    top = rank[rank["alto_desempenho"]]
+    assert len(rows) == len(top) and sum(r["is_consensus_80"] for r in rows) == int(top["alto_desempenho_taxa_eng"].sum())
     assert {r["formato"] for r in rows} <= CHAVES
