@@ -116,3 +116,24 @@ Os gates de aceitação não acessam provedores externos e geram seus próprios
 fixtures. Antes de usar qualquer Reel comercial, leia
 [`docs/HUMAN_DEPENDENCIES.md`](docs/HUMAN_DEPENDENCIES.md), especialmente as
 revisões jurídicas e a validação de CNAE/roteiros.
+
+## Base de Reels para MPEs (case de análise)
+
+Base pública de **2.715 Reels de 126 perfis** (Instagram, coleta de 17–18/11/2026 via Apify), com ranking por
+`score_relativo` e análise multimodal do top 10% (250 Reels). Detalhes em `docs/base_de_dados.md` e
+`docs/ANALISE_TOP10.md`; decisões em ADR-009.
+
+Reproduzir ou ampliar a base (exige `APIFY_TOKEN` no `.env`; a pasta `dados/` não é versionada):
+
+```bash
+.venv/bin/python -m src.coleta.descoberta --hashtags mei,abrirmei --por-hashtag 40 --verificar 70
+.venv/bin/python -m src.coleta.instagram --perfis config/perfis_loteN.csv --prefixo instagram_loteN \
+  --so-reels --limite 40 --max-usd 3 --sem-midia --confirmo-custo
+.venv/bin/python -m src.base.unificar --lotes instagram,...,instagram_loteN
+.venv/bin/python -m src.ranking.ranking && .venv/bin/python -m src.base.documentar
+.venv/bin/python -m src.analise.baixar_top && .venv/bin/python -m src.analise.manifesto \
+  && .venv/bin/python -m src.analise.features && .venv/bin/python -m src.analise.classificar
+```
+
+Limite conhecido: o crédito gratuito da Apify (US$ 5/mês) limita o volume; vídeos e miniaturas servem só para
+análise interna e não devem ser redistribuídos.
