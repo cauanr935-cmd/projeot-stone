@@ -15,4 +15,5 @@ no pacote de specs; 900 registra emendas aos testes de aceitação.
 | [006](ADR-006-licencas-de-pesos-e-bibliotecas.md) | Licenças de pesos/bibliotecas (AGPL, CC-BY-NC) e padrões seguros | 02–05 | Aceito |
 | [007](ADR-007-componentes-adiados.md) | Componentes adiados/opcionais (Kinocut, Remotion, ZeroGPU, publicação) | 04, 07 | Aceito |
 | [008](ADR-008-autonomia-e-fallbacks-offline.md) | Autonomia do build e fallbacks offline | 00–07 | Aceito |
+| [009](ADR-009-base-de-reels-para-mpes.md) | Base de Reels para MPEs: coleta, orçamento, exclusões | case | Aceito |
 | [900](ADR-900-emendas-aos-testes.md) | Emendas aos testes de aceitação | — | Vazio |

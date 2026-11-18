@@ -42,3 +42,6 @@ descoberta:
   teto_usd_run: 1.00
   teto_usd_verificacao: 0.25
   seguidores_min: 1000          # descarta contas minúsculas/fantasma
+
+base:
+  janela_dias: 365             # atividade nos últimos 12 meses (TAPI)

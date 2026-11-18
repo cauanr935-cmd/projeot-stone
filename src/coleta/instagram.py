@@ -257,13 +257,13 @@ def _main_reels(args, client, tabela, perfis, saida, cache, data_coleta) -> int:
     df = pd.DataFrame(linhas).drop_duplicates("post_id")
     # colaborações: dono ≠ perfil coletado (seguidores seriam de outra conta) -> excluídos e registrados
     alheio = ~df["username"].isin(usernames)
-    df[alheio].to_parquet(saida / "instagram_reels_excluidos_dono_diferente.parquet", index=False)
+    df[alheio].to_parquet(saida / f"{args.prefixo}_reels_excluidos_dono_diferente.parquet", index=False)
     df = df[~alheio]
     df = df.merge(perfis[["username", "seguidores", "tamanho", "tipo_conta", "segmento"]], on="username", how="left")
     total = len(df)
     minimo = cfg["idade_minima_dias"]
     elegiveis = filtrar_idade(df, minimo)
-    df.drop(elegiveis.index).to_parquet(saida / "instagram_posts_excluidos.parquet", index=False)
+    df.drop(elegiveis.index).to_parquet(saida / f"{args.prefixo}_posts_excluidos.parquet", index=False)
     df = adicionar_metricas(elegiveis).reset_index(drop=True)
     print(f"{int(alheio.sum())} reels de dono diferente excluídos; "
           f"{total} reels, {len(df)} com {minimo}+ dias")
@@ -279,7 +279,7 @@ def _main_reels(args, client, tabela, perfis, saida, cache, data_coleta) -> int:
                 status.append({"thumb_ok": None, "video_ok": None, "slides_baixados": None, "pasta_midia": None})
         df = pd.concat([df, pd.DataFrame(status)], axis=1)
         print(f"Vídeos baixados: {int(df['video_ok'].fillna(False).sum())}/{len(sel)} selecionados")
-    df.to_parquet(saida / "instagram_posts.parquet", index=False)
+    df.to_parquet(saida / f"{args.prefixo}_posts.parquet", index=False)
     print("Pronto:", saida.resolve())
     return 0
 
@@ -295,6 +295,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--apenas", help="usernames separados por vírgula (subconjunto do CSV)")
     ap.add_argument("--max-perfis", type=int)
     ap.add_argument("--saida", default=cfg["saida_padrao"])
+    ap.add_argument("--prefixo", default="instagram", help="prefixo dos arquivos de saída (lotes extras)")
     ap.add_argument("--so-reels", action="store_true", help="usa o actor de Reels (foco do projeto)")
     ap.add_argument("--max-usd", type=float, default=3.0, help="teto de gasto do run de Reels")
     ap.add_argument("--amostra-midia", type=int, default=0, help="(--so-reels) amostra aleatória extra para mídia")
@@ -328,7 +329,7 @@ def main(argv: list[str] | None = None) -> int:
     perfis = coletar_perfis(client, usernames, cache, dia, 0.25)
     perfis["data_coleta"] = data_coleta
     perfis = perfis.merge(tabela, on="username", how="left")
-    perfis.to_parquet(saida / "instagram_perfis.parquet", index=False)
+    perfis.to_parquet(saida / f"{args.prefixo}_perfis.parquet", index=False)
 
     if args.so_reels:
         return _main_reels(args, client, tabela, perfis, saida, cache, data_coleta)
