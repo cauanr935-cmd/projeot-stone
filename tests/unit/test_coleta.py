@@ -173,3 +173,23 @@ def test_baixar_sem_url_ou_com_arquivo_existente(tmp_path):
 def test_destino_frames(tmp_path):
     assert midia.destino_frames(tmp_path / "abc" / "video.mp4") == tmp_path / "abc" / "frames"
     assert midia.destino_frames(tmp_path / "xyz.mp4") == tmp_path / "xyz_frames"
+
+
+def test_selecionar_top_por_tipo():
+    df = pd.DataFrame({
+        "post_id": ["r1", "r2", "r3", "c1", "c2"],
+        "tipo_post": ["reels", "reels", "reels", "carrossel", "carrossel"],
+        "views": [100, 900, 500, None, None],
+        "curtidas": [1, 1, 1, 10, 50], "comentarios": [0, 0, 0, 0, 5],
+    })
+    assert ig.selecionar_top(df, 2) == {"r2", "r3", "c1", "c2"}
+    assert ig.selecionar_top(df, 1) == {"r2", "c2"}
+
+
+def test_campo_aceita_dict_e_objeto():
+    class Run:
+        default_dataset_id = "d1"
+        usage_total_usd = 0.5
+    assert ig._campo(Run(), "default_dataset_id", "defaultDatasetId") == "d1"
+    assert ig._campo({"defaultDatasetId": "d2"}, "default_dataset_id", "defaultDatasetId") == "d2"
+    assert ig._campo(Run(), "inexistente") is None

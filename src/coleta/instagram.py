@@ -34,17 +34,27 @@ def _cfg() -> dict:
 
 
 # --------------------------------------------------------------------------- Apify
+def _campo(run, *nomes):
+    """Lê um campo do run: apify-client >= 3 devolve objeto pydantic; versões antigas, dict."""
+    for n in nomes:
+        v = run.get(n) if isinstance(run, dict) else getattr(run, n, None)
+        if v is not None:
+            return v
+    return None
+
+
 def rodar_actor(client, actor: str, entrada: dict, cache: Path) -> list[dict]:
     """Roda o actor só se não houver cache; grava custo do run em `<cache>.run.json`."""
     if cache.exists():
         log.info("cache hit: %s", cache.name)
         return json.loads(cache.read_text(encoding="utf-8"))
     run = client.actor(actor).call(run_input=entrada)
-    itens = list(client.dataset(run["defaultDatasetId"]).iterate_items())
+    itens = list(client.dataset(_campo(run, "default_dataset_id", "defaultDatasetId")).iterate_items())
     cache.write_text(json.dumps(itens, ensure_ascii=False), encoding="utf-8")
     cache.with_suffix(".run.json").write_text(json.dumps({
-        "actor": actor, "run_id": run.get("id"), "itens": len(itens),
-        "usageTotalUsd": run.get("usageTotalUsd"), "stats": run.get("stats"),
+        "actor": actor, "run_id": _campo(run, "id"), "itens": len(itens),
+        "usageTotalUsd": _campo(run, "usage_total_usd", "usageTotalUsd"),
+        "stats": _campo(run, "stats"),
     }, ensure_ascii=False, default=str), encoding="utf-8")
     return itens
 
@@ -156,6 +166,14 @@ def normalizar_post(p: dict, data_coleta: datetime) -> dict:
     }
 
 
+def selecionar_top(df: pd.DataFrame, n: int) -> set[str]:
+    """post_ids dos `n` mais acessados por tipo_post: views (reels) ou interações (carrossel/imagem)."""
+    d = df.copy()
+    d["_k"] = d["views"].where(d["tipo_post"] == "reels", d["curtidas"].fillna(0) + d["comentarios"].fillna(0))
+    d["_k"] = d["_k"].fillna(0)
+    return set(d.sort_values("_k", ascending=False).groupby("tipo_post").head(n)["post_id"])
+
+
 # --------------------------------------------------------------------------- Perfis
 def ler_perfis_csv(caminho: str | Path, plataforma: str,
                    apenas: list[str] | None = None, max_perfis: int | None = None) -> pd.DataFrame:
@@ -190,6 +208,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--apenas", help="usernames separados por vírgula (subconjunto do CSV)")
     ap.add_argument("--max-perfis", type=int)
     ap.add_argument("--saida", default=cfg["saida_padrao"])
+    ap.add_argument("--top-midia", type=int, help="baixa mídia só dos N posts mais acessados por tipo")
     ap.add_argument("--sem-midia", action="store_true", help="coleta só os metadados")
     ap.add_argument("--confirmo-custo", action="store_true", help="libera coleta paga acima do limite de perfis")
     args = ap.parse_args(argv)
@@ -221,7 +240,7 @@ def main(argv: list[str] | None = None) -> int:
     perfis = perfis.merge(tabela, on="username", how="left")
     perfis.to_parquet(saida / "instagram_perfis.parquet", index=False)
 
-    linhas = []
+    linhas, brutos = [], {}
     for n, user in enumerate(usernames, start=1):
         try:
             posts = coletar_posts_perfil(client, user, args.desde, args.limite, cache)
@@ -233,7 +252,8 @@ def main(argv: list[str] | None = None) -> int:
             if p.get("error") or not p.get("shortCode"):
                 continue
             linha = normalizar_post(p, data_coleta)
-            if not args.sem_midia:
+            brutos[linha["post_id"]] = p
+            if not args.sem_midia and args.top_midia is None:
                 pasta = saida / "midia" / "instagram" / linha["post_id"]
                 linha.update(baixar_midia(p, pasta))
                 linha["pasta_midia"] = str(pasta)
@@ -245,6 +265,16 @@ def main(argv: list[str] | None = None) -> int:
     df = pd.DataFrame(linhas).drop_duplicates("post_id")
     df = df.merge(perfis[["username", "seguidores", "tamanho", "tipo_conta", "segmento"]],
                   on="username", how="left")
+    if not args.sem_midia and args.top_midia is not None:  # baixa logo (URLs expiram em ~1 dia)
+        top = selecionar_top(df, args.top_midia)
+        extras = []
+        for pid in df["post_id"]:
+            if pid in top:
+                pasta = saida / "midia" / "instagram" / pid
+                extras.append({**baixar_midia(brutos[pid], pasta), "pasta_midia": str(pasta)})
+            else:
+                extras.append({"thumb_ok": None, "video_ok": None, "slides_baixados": None, "pasta_midia": None})
+        df = pd.concat([df.reset_index(drop=True), pd.DataFrame(extras)], axis=1)
     total = len(df)
     minimo = cfg["instagram"]["idade_minima_dias"]
     elegiveis = filtrar_idade(df, minimo)
@@ -254,7 +284,9 @@ def main(argv: list[str] | None = None) -> int:
     df.to_parquet(saida / "instagram_posts.parquet", index=False)
     if "video_ok" in df:
         reels = df["tipo_post"] == "reels"
-        print(f"Vídeos baixados: {int(df.loc[reels, 'video_ok'].sum())}/{int(reels.sum())}")
+        tentados = df.loc[reels, "video_ok"].notna()
+        print(f"Vídeos baixados: {int(df.loc[reels, 'video_ok'].fillna(False).sum())}/{int(tentados.sum())} tentados "
+              f"({int(reels.sum())} reels)")
     print("Pronto:", saida.resolve())
     return 0
 
