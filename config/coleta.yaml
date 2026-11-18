@@ -6,6 +6,7 @@ perfis_csv: config/perfis.csv
 max_perfis_sem_confirmacao: 5
 
 instagram:
+  actor_reels: apify/instagram-reel-scraper   # foco do projeto: só Reels
   actor_posts: apify/instagram-scraper
   actor_perfis: apify/instagram-profile-scraper
   idade_minima_dias: 14        # regra do case: métricas estabilizadas
@@ -33,3 +34,11 @@ midia:
 download:
   tentativas: 4
   timeout_s: 60
+
+descoberta:
+  actor_hashtag: apify/instagram-hashtag-scraper
+  hashtags: [mei, microempreendedor, pequenosnegocios, empreendedorismo, precificacao, gestaofinanceira]
+  reels_por_hashtag: 50
+  teto_usd_run: 1.00
+  teto_usd_verificacao: 0.25
+  seguidores_min: 1000          # descarta contas minúsculas/fantasma

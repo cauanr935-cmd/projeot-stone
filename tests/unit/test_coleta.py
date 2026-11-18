@@ -193,3 +193,39 @@ def test_campo_aceita_dict_e_objeto():
     assert ig._campo(Run(), "default_dataset_id", "defaultDatasetId") == "d1"
     assert ig._campo({"defaultDatasetId": "d2"}, "default_dataset_id", "defaultDatasetId") == "d2"
     assert ig._campo(Run(), "inexistente") is None
+
+
+def test_agregar_por_dono_conta_hashtags_e_reels():
+    from src.coleta.descoberta import agregar_por_dono
+    itens = [
+        {"ownerUsername": "A", "hashtag": "mei", "videoPlayCount": 10, "url": "u1"},
+        {"ownerUsername": "a", "hashtag": "pequenosnegocios", "videoPlayCount": 99, "url": "u2"},
+        {"ownerUsername": "b", "hashtag": "mei", "videoPlayCount": 5, "url": "u3"},
+        {"ownerUsername": "", "hashtag": "mei", "url": "u4"},
+        {"ownerUsername": "c", "error": "x", "url": "u5"},
+    ]
+    g = agregar_por_dono(itens)
+    assert g["username"].tolist() == ["a", "b"]
+    assert g.loc[0, "n_reels"] == 2 and g.loc[0, "n_hashtags"] == 2 and g.loc[0, "views_max"] == 99
+
+
+def test_checar_orcamento_bloqueia_quando_nao_cabe():
+    class U:
+        def limits(self):
+            return {"limits": {"max_monthly_usage_usd": 5.0}, "current": {"monthly_usage_usd": 4.2}}
+
+    class C:
+        def user(self):
+            return U()
+    ig.checar_orcamento(C(), 0.2)
+    with pytest.raises(SystemExit):
+        ig.checar_orcamento(C(), 0.5)
+
+
+def test_selecionar_para_midia_top_mais_amostra_reprodutivel():
+    df = pd.DataFrame({"post_id": [f"p{i}" for i in range(20)],
+                       "score_relativo": [float(i) for i in range(20)]})
+    df.loc[3, "score_relativo"] = None
+    a = ig.selecionar_para_midia(df, 3, 4, seed=42)
+    assert {"p19", "p18", "p17"} <= a and len(a) == 7 and "p3" not in a
+    assert a == ig.selecionar_para_midia(df, 3, 4, seed=42)

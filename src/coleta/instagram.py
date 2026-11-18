@@ -43,12 +43,34 @@ def _campo(run, *nomes):
     return None
 
 
-def rodar_actor(client, actor: str, entrada: dict, cache: Path) -> list[dict]:
-    """Roda o actor só se não houver cache; grava custo do run em `<cache>.run.json`."""
+def saldo_usd(client) -> float:
+    """Crédito mensal restante do Apify (limite do plano − uso no ciclo)."""
+    lim = client.user().limits()
+    d = lim.model_dump(mode="json") if hasattr(lim, "model_dump") else dict(lim)
+    return float(d["limits"]["max_monthly_usage_usd"]) - float(d["current"]["monthly_usage_usd"])
+
+
+def checar_orcamento(client, teto_usd: float, reserva_usd: float = 0.5) -> None:
+    """Aborta se o teto do run + reserva não couber no saldo — nunca estoura os créditos."""
+    saldo = saldo_usd(client)
+    if teto_usd + reserva_usd > saldo:
+        raise SystemExit(f"orçamento insuficiente: teto US$ {teto_usd:.2f} + reserva US$ {reserva_usd:.2f} "
+                         f"> saldo US$ {saldo:.2f}")
+
+
+def rodar_actor(client, actor: str, entrada: dict, cache: Path, max_usd: float | None = None) -> list[dict]:
+    """Roda o actor só se não houver cache; grava custo do run em `<cache>.run.json`.
+
+    `max_usd`: teto de cobrança do run (o Apify interrompe ao atingir) + checagem de saldo antes.
+    """
     if cache.exists():
         log.info("cache hit: %s", cache.name)
         return json.loads(cache.read_text(encoding="utf-8"))
-    run = client.actor(actor).call(run_input=entrada)
+    kw = {}
+    if max_usd is not None:
+        checar_orcamento(client, max_usd)
+        kw["max_total_charge_usd"] = max_usd
+    run = client.actor(actor).call(run_input=entrada, **kw)
     itens = list(client.dataset(_campo(run, "default_dataset_id", "defaultDatasetId")).iterate_items())
     cache.write_text(json.dumps(itens, ensure_ascii=False), encoding="utf-8")
     cache.with_suffix(".run.json").write_text(json.dumps({
@@ -59,10 +81,11 @@ def rodar_actor(client, actor: str, entrada: dict, cache: Path) -> list[dict]:
     return itens
 
 
-def coletar_perfis(client, usernames: list[str], pasta_cache: Path, dia: str) -> pd.DataFrame:
+def coletar_perfis(client, usernames: list[str], pasta_cache: Path, dia: str,
+                   max_usd: float | None = None) -> pd.DataFrame:
     h = hashlib.sha1(",".join(sorted(usernames)).encode()).hexdigest()[:8]
     itens = rodar_actor(client, _cfg()["actor_perfis"], {"usernames": usernames},
-                        pasta_cache / f"perfis_{dia}_{h}.json")
+                        pasta_cache / f"perfis_{dia}_{h}.json", max_usd)
     linhas = [{
         "username": (p.get("username") or "").lower(),
         "nome": p.get("fullName"),
@@ -76,6 +99,15 @@ def coletar_perfis(client, usernames: list[str], pasta_cache: Path, dia: str) ->
         "erro": p.get("error"),
     } for p in itens]
     return pd.DataFrame(linhas)
+
+
+def coletar_reels(client, usernames: list[str], desde: str, limite: int, pasta_cache: Path,
+                  max_usd: float) -> list[dict]:
+    """Um único run do actor de Reels para todos os perfis (1 cobrança de início), com teto de gasto."""
+    h = hashlib.sha1(",".join(sorted(usernames)).encode()).hexdigest()[:8]
+    entrada = {"username": usernames, "resultsLimit": limite, "onlyPostsNewerThan": desde}
+    return rodar_actor(client, _cfg()["actor_reels"], entrada,
+                       pasta_cache / f"reels_{h}_{desde}_{limite}.json", max_usd)
 
 
 def coletar_posts_perfil(client, username: str, desde: str, limite: int, pasta_cache: Path) -> list[dict]:
@@ -139,7 +171,7 @@ def baixar_midia(post: dict, pasta: Path) -> dict:
 
 
 # --------------------------------------------------------------------------- Normalização
-def normalizar_post(p: dict, data_coleta: datetime) -> dict:
+def normalizar_post(p: dict, data_coleta: datetime, tipo_fixo: str | None = None) -> dict:
     ts = pd.to_datetime(p.get("timestamp"), utc=True)
     views = numero(p.get("videoPlayCount"))
     if views is None:
@@ -149,7 +181,7 @@ def normalizar_post(p: dict, data_coleta: datetime) -> dict:
         "post_id": p.get("shortCode"),
         "url": p.get("url"),
         "username": (p.get("ownerUsername") or "").lower(),
-        "tipo_post": mapear_tipo(p.get("type")),
+        "tipo_post": tipo_fixo or mapear_tipo(p.get("type")),
         "product_type": p.get("productType"),
         "legenda": p.get("caption"),
         "hashtags": p.get("hashtags"),
@@ -164,6 +196,15 @@ def normalizar_post(p: dict, data_coleta: datetime) -> dict:
         "publipost": p.get("isSponsored") or p.get("paidPartnership"),
         "data_coleta": data_coleta,
     }
+
+
+def selecionar_para_midia(df: pd.DataFrame, top_n: int, amostra_n: int, seed: int = 42) -> set[str]:
+    """Top `top_n` por score_relativo + amostra aleatória (seed fixa) do restante, para comparação (TAPI)."""
+    base = df[df["score_relativo"].notna()]
+    top = base.nlargest(top_n, "score_relativo")
+    resto = base.drop(top.index)
+    amostra = resto.sample(min(amostra_n, len(resto)), random_state=seed)
+    return set(top["post_id"]) | set(amostra["post_id"])
 
 
 def selecionar_top(df: pd.DataFrame, n: int) -> set[str]:
@@ -198,6 +239,52 @@ def checar_custo(n_perfis: int, confirmo: bool) -> None:
 
 
 # --------------------------------------------------------------------------- Main
+def _main_reels(args, client, tabela, perfis, saida, cache, data_coleta) -> int:
+    cfg = load_coleta()["instagram"]
+    usernames = tabela["username"].tolist()
+    itens = coletar_reels(client, usernames, args.desde, args.limite, cache, args.max_usd)
+    print(f"{len(itens)} reels recebidos de {len(usernames)} perfis")
+    linhas, brutos = [], {}
+    for p in itens:
+        if p.get("error") or not p.get("shortCode"):
+            continue
+        linha = normalizar_post(p, data_coleta, tipo_fixo="reels")
+        brutos[linha["post_id"]] = p
+        linhas.append(linha)
+    if not linhas:
+        print("nenhum reel coletado")
+        return 1
+    df = pd.DataFrame(linhas).drop_duplicates("post_id")
+    # colaborações: dono ≠ perfil coletado (seguidores seriam de outra conta) -> excluídos e registrados
+    alheio = ~df["username"].isin(usernames)
+    df[alheio].to_parquet(saida / "instagram_reels_excluidos_dono_diferente.parquet", index=False)
+    df = df[~alheio]
+    df = df.merge(perfis[["username", "seguidores", "tamanho", "tipo_conta", "segmento"]], on="username", how="left")
+    total = len(df)
+    minimo = cfg["idade_minima_dias"]
+    elegiveis = filtrar_idade(df, minimo)
+    df.drop(elegiveis.index).to_parquet(saida / "instagram_posts_excluidos.parquet", index=False)
+    df = adicionar_metricas(elegiveis).reset_index(drop=True)
+    print(f"{int(alheio.sum())} reels de dono diferente excluídos; "
+          f"{total} reels, {len(df)} com {minimo}+ dias")
+    if not args.sem_midia and args.top_midia:
+        sel = selecionar_para_midia(df, args.top_midia, args.amostra_midia)
+        df["grupo_midia"] = df["post_id"].map(lambda i: "sel" if i in sel else None)
+        status = []
+        for pid in df["post_id"]:
+            if pid in sel:
+                pasta = saida / "midia" / "instagram" / pid
+                status.append({**baixar_midia(brutos[pid], pasta), "pasta_midia": str(pasta)})
+            else:
+                status.append({"thumb_ok": None, "video_ok": None, "slides_baixados": None, "pasta_midia": None})
+        df = pd.concat([df, pd.DataFrame(status)], axis=1)
+        print(f"Vídeos baixados: {int(df['video_ok'].fillna(False).sum())}/{len(sel)} selecionados")
+    df.to_parquet(saida / "instagram_posts.parquet", index=False)
+    print("Pronto:", saida.resolve())
+    return 0
+
+
+
 def main(argv: list[str] | None = None) -> int:
     cfg = load_coleta()
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -208,6 +295,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--apenas", help="usernames separados por vírgula (subconjunto do CSV)")
     ap.add_argument("--max-perfis", type=int)
     ap.add_argument("--saida", default=cfg["saida_padrao"])
+    ap.add_argument("--so-reels", action="store_true", help="usa o actor de Reels (foco do projeto)")
+    ap.add_argument("--max-usd", type=float, default=3.0, help="teto de gasto do run de Reels")
+    ap.add_argument("--amostra-midia", type=int, default=0, help="(--so-reels) amostra aleatória extra para mídia")
     ap.add_argument("--top-midia", type=int, help="baixa mídia só dos N posts mais acessados por tipo")
     ap.add_argument("--sem-midia", action="store_true", help="coleta só os metadados")
     ap.add_argument("--confirmo-custo", action="store_true", help="libera coleta paga acima do limite de perfis")
@@ -235,10 +325,13 @@ def main(argv: list[str] | None = None) -> int:
     data_coleta = datetime.now(UTC)
     dia = data_coleta.strftime("%Y-%m-%d")
 
-    perfis = coletar_perfis(client, usernames, cache, dia)
+    perfis = coletar_perfis(client, usernames, cache, dia, 0.25)
     perfis["data_coleta"] = data_coleta
     perfis = perfis.merge(tabela, on="username", how="left")
     perfis.to_parquet(saida / "instagram_perfis.parquet", index=False)
+
+    if args.so_reels:
+        return _main_reels(args, client, tabela, perfis, saida, cache, data_coleta)
 
     linhas, brutos = [], {}
     for n, user in enumerate(usernames, start=1):
