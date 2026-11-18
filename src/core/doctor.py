@@ -102,7 +102,11 @@ def probe() -> dict[str, Any]:
     binaries_report["ffmpeg"] = {"ok": ffmpeg_ok, "path": binaries["ffmpeg"] or None, "version": None}
     binaries_report["ffprobe"] = {"ok": ffprobe_ok, "path": binaries["ffprobe"] or None, "version": None}
     offline = os.getenv("REELS_OFFLINE", "0") == "1"
-    if not offline and packages["edge-tts"]:
+    from src.router import kokoro_tts
+    allow_edge = os.getenv("ALLOW_NONCOMMERCIAL_EDGE_TTS", "0") == "1"
+    if kokoro_tts.disponivel():
+        tts = "kokoro"
+    elif allow_edge and not offline and packages["edge-tts"]:
         tts = "edge-tts"
     elif binaries_report["espeak-ng"]["ok"]:
         tts = "espeak-ng"
@@ -126,11 +130,12 @@ def probe() -> dict[str, Any]:
                              "impact": "Locução de teste tonal, sem voz natural.",
                              "fallback": "Gerador de áudio local determinístico.",
                              "verify": "python -m src.core.doctor --json"})
-    dependencies.append({"id": "legal-edge-tts", "priority": "RECOMENDADO", "spec": "02",
-                         "action": "Revisar os termos comerciais do serviço edge-tts antes da publicação.",
-                         "impact": "A autorização de uso comercial do endpoint não é explícita.",
-                         "fallback": "Usar TTS local com licença revisada.",
-                         "verify": "Revisão jurídica documentada em docs/HUMAN_DEPENDENCIES.md"})
+    if tts == "edge-tts":
+        dependencies.append({"id": "legal-edge-tts", "priority": "JURÍDICO", "spec": "02",
+                             "action": "edge-tts está habilitado (ALLOW_NONCOMMERCIAL_EDGE_TTS=1): sem assinatura Azure o uso comercial não é autorizado.",
+                             "impact": "Risco legal em render comercial.",
+                             "fallback": "Desabilitar a variável: o roteador usa Kokoro local (Apache-2.0).",
+                             "verify": "python -m src.core.doctor --json"})
     for name, info in binaries_report.items():
         if name == "ollama" and not info["ok"]:
             dependencies.append({"id": "ollama-local", "priority": "OPCIONAL", "spec": "02",

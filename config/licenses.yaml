@@ -32,6 +32,8 @@ entries:
   # --- Voz ---
   edge-tts:               {kind: tts_service, license: "biblioteca LGPL-3.0; serviço Microsoft não documentado", commercial_ok: review, verify: true,
                            note: "A pesquisa trata como comercialmente seguro; não há concessão explícita de uso comercial do endpoint. Revisão jurídica."}
+  kokoro:                 {kind: tts_engine, license: "Kokoro-82M Apache-2.0 (pesos); kokoro-onnx MIT; deps phonemizer/espeak-ng GPL", commercial_ok: review, verify: true,
+                           note: "ADR-010: áudio gerado não herda a licença; revisar redistribuição do pacote (legal-kokoro-phonemizer)."}
   kokoro-82m:             {kind: tts_weights, license: "Apache-2.0", commercial_ok: true, verify: true}
   piper-voice-pt_BR-faber-medium: {kind: tts_weights, license: "ver MODEL_CARD (pesquisa: CC0)", commercial_ok: review, verify: true}
   piper-tts:              {kind: tts_engine, license: "MIT (rhasspy/piper) / GPL-3.0 (piper1-gpl)", commercial_ok: true, verify: true,

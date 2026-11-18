@@ -17,7 +17,7 @@
 ## Desvios e riscos
 - `onlyPostsNewerThan` do actor não filtra posts fixados antigos: o corte de 12 meses é refeito na unificação.
 - O teto de ~35 Reels por perfil trunca a janela dos perfis que postam muito.
-- Volume (776) abaixo da meta do TAPI (2.000–5.000): limitado pelo crédito gratuito (ver H-CASE-02).
+- Volume final de **1.672 Reels de 76 perfis** (17–18/11/2026; 776 foi o volume da primeira versão, antes dos lotes 2 e 3) abaixo da meta do TAPI (2.000–5.000): limitado pelo crédito gratuito (ver H-CASE-02). A análise da Fase 5 fecha com esta base; a expansão fica como pendência humana.
 
 ## Ranking (Fase 4)
 - **Principal:** `score_relativo` (taxa_eng ÷ mediana do perfil); **secundária:** `taxa_eng` do case — ambas em `ranking.parquet`.
@@ -28,3 +28,12 @@
   (`score_extremo`, 70 posts), não removidos.
 - **Lote 3:** 42 perfis (US$ ~3,7). Base final **1.672 Reels de 76 perfis**, abaixo da meta de 2.000 (crédito esgotado).
 - A mídia do top global é completada a partir do cache bruto enquanto as URLs não expiram (~1 dia).
+
+## Fase 5 — análise do top 10% (18/11/2026)
+- Base auditada: 1.672 Reels (1.504 aptos, 155 com curtidas ocultas, 13 de perfis com < 5 Reels aptos); 1.003 posts excluídos
+  na triagem; 151 no top 10% (48 perfis); 80 de consenso entre `score_relativo` e `taxa_eng`; 393 vídeos em disco.
+- Os 151 vídeos do top já estavam em disco (`video_ok`), então **não houve download** nem uso de cookies (`src/analise/manifesto.py`).
+- Transcrição local (faster-whisper `small`, int8, CPU), cortes de cena e frames via FFmpeg, rosto via YuNet (OpenCV; o OpenCV 5 não
+  traz os Haar XML). Classificação nos 5 formatos por regras léxicas (legenda + transcrição); LLM local opcional (`--ollama`).
+- Limitações: parte dos Reels não tem trilha de áudio; os 5 formatos são frameworks de copy, então o rótulo é uma estimativa.
+- Não implementado: `score_relativo_rolling` (não existe na base; fica para a expansão) e a Etapa 2 (expansão para 2.000+).

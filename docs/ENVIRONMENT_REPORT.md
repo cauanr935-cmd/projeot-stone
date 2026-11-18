@@ -1,7 +1,7 @@
 # Relatório do ambiente
 
 - Python: 3.12.3
-- Engines efetivos: `{"asr": "none", "tts": "edge-tts", "llm": "template_engine", "vlm": "heuristic_only", "music": "procedural_generator", "depth": "geometric", "subject_detection": "opencv_saliency"}`
+- Engines efetivos: `{"asr": "faster_whisper", "tts": "kokoro", "llm": "template_engine", "vlm": "heuristic_only", "music": "procedural_generator", "depth": "geometric", "subject_detection": "opencv_saliency"}`
 
 ## Binários
 
@@ -37,9 +37,9 @@
 | pysubs2 | 1.9.1 |
 | opencv | 5.0.0.93 |
 | whisperx | ausente |
-| faster-whisper | ausente |
+| faster-whisper | 1.2.1 |
 | mediapipe | ausente |
 | transformers | ausente |
-| kokoro-onnx | ausente |
+| kokoro-onnx | 0.6.1 |
 | piper-tts | ausente |
 | torch | ausente |

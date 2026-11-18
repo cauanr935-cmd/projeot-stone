@@ -17,6 +17,7 @@ from typing import Any
 import httpx
 import numpy as np
 
+from src.router import kokoro_tts
 from src.router.license_guard import CommercialLicenseViolationError, UnknownLicenseError
 
 
@@ -32,8 +33,15 @@ class ZeroCostCascadeRouter:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self._blocked_until: dict[str, float] = {}
         self._tts_cache: dict[str, tuple[bytes, bytes, dict]] = {}
-        self.effective_tts_engine = "edge-tts" if not self.offline and \
-            importlib.util.find_spec("edge_tts") is not None else "placeholder_tone"
+        # Ordem (custo zero + licença comercial): Kokoro local (Apache-2.0) > edge-tts (só com opt-in explícito,
+        # uso comercial não autorizado pela Microsoft sem Azure; ADR-010) > placeholder de CI.
+        allow_edge = self.env.get("ALLOW_NONCOMMERCIAL_EDGE_TTS", "0") == "1"
+        if kokoro_tts.disponivel(self.env):
+            self.effective_tts_engine = "kokoro"
+        elif allow_edge and not self.offline and importlib.util.find_spec("edge_tts") is not None:
+            self.effective_tts_engine = "edge-tts"
+        else:
+            self.effective_tts_engine = "placeholder_tone"
         self.last_engines = {"asr": "none", "tts": "placeholder_tone", "llm": "template_engine",
                              "vlm": "heuristic_only", "music": "procedural_generator",
                              "depth": "geometric", "subject_detection": "opencv_saliency"}
@@ -124,7 +132,26 @@ class ZeroCostCascadeRouter:
         temp_srt = self.cache_dir / f"{cache_key}.srt"
         if not temp.exists() or not temp_srt.exists():
             generated = False
-            if engine == "edge-tts":
+            if engine == "kokoro":
+                try:
+                    wav = temp.with_suffix(".kokoro.wav")
+                    palavras = await asyncio.to_thread(kokoro_tts.sintetizar, text, voice, rate, wav, self.env)
+                    proc = subprocess.run([shutil.which("ffmpeg") or "ffmpeg", "-hide_banner", "-nostats", "-y", "-i",
+                                           str(wav), "-codec:a", "libmp3lame", "-b:a", "128k", str(temp)],
+                                          capture_output=True, text=True)
+                    wav.unlink(missing_ok=True)
+                    if proc.returncode:
+                        raise RuntimeError(proc.stderr[-500:])
+                    def stamp(sec: float) -> str:
+                        ms = round(sec * 1000)
+                        return f"{ms // 3600000:02}:{ms // 60000 % 60:02}:{ms // 1000 % 60:02},{ms % 1000:03}"
+                    temp_srt.write_text("\n".join(
+                        f"{i}\n{stamp(a)} --> {stamp(max(a + .1, b))}\n{w}\n" for i, (w, a, b) in enumerate(palavras, 1)),
+                        encoding="utf-8")
+                    generated = True
+                except Exception:
+                    engine = "placeholder_tone"
+            elif engine == "edge-tts":
                 try:
                     import edge_tts
                     communicate = edge_tts.Communicate(text, voice, rate=rate)
@@ -153,9 +180,7 @@ class ZeroCostCascadeRouter:
         audio, subtitles = temp.read_bytes(), temp_srt.read_bytes()
         mp3_path.write_bytes(audio)
         srt_path.write_bytes(subtitles)
-        tier = 1 if engine == "edge-tts" else 5
-        if engine != "edge-tts":
-            tier = 5
+        tier = {"edge-tts": 1, "kokoro": 3}.get(engine, 5)
         info = {"engine": engine, "tier": tier}
         self._tts_cache[cache_key] = (audio, subtitles, info)
         self.last_engines["tts"] = engine

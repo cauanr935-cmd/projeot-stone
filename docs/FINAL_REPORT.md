@@ -49,3 +49,17 @@ Piper não foram instalados; nenhum modelo pesado foi baixado.
   modelos/pesos de fluxo óptico e profundidade permanecem opcionais.
 - Os clipes gerados são artefatos de aceitação, não materiais promocionais
   aprovados pela Stone. Revise direitos de imagem/voz e o resultado final.
+
+---
+
+## Atualização 18/11/2026 — case de análise de Reels para MPEs
+
+- **Base:** 1.672 Reels de 76 perfis (meta do TAPI de 2.000+ não atingida; expansão pendente, H-CASE-03). 1.504 aptos ao ranking;
+  151 no top 10% de 48 perfis; 80 de consenso entre `score_relativo` e `taxa_eng`; 1.003 posts excluídos.
+- **Análise do top 10%:** os 151 vídeos já estavam em disco; transcrição local (faster-whisper small int8), cortes, frames e rosto;
+  classificação nos 5 formatos por regras. Resultado e limitações em `docs/ANALISE_TOP10.md`: nenhum formato se destaca com significância.
+  Retrato do top: ~52 s, ~171 palavras/min, ~1 corte/min, rosto presente.
+- **TTS:** Kokoro-82M local (Apache-2.0) substitui o edge-tts como padrão (ADR-010). Pendência jurídica: GPL do `phonemizer`/espeak-ng.
+- **Documentação:** ADR-009 corrigido (1.672, não 776) e ADR-010 novo; dossiê `docs/COMPLIANCE_H_CASE_01.md` com minuta para a organização.
+- **Desvios da proposta de custo zero:** sem a Etapa 2 (expansão); detector de rosto YuNet no lugar de Haar; áudio decodificado via ffmpeg por
+  incompatibilidade do `av`; `score_relativo_rolling`, Ollama/VLM e sherpa-onnx não implementados.

@@ -85,6 +85,9 @@ Nenhuma conta de rede social é necessária para gerar o `.mp4`.
 |---|---|---|---|---|---|---|
 | H-CASE-01 | JURÍDICO | Case | Confirmar com a organização do case (Stone/Inteli) que a coleta de Reels via actors do Apify é a rota de extração combinada no kickoff de 26/10/2026 e que o uso da mídia baixada é só para análise interna | O TAPI coloca fora do escopo qualquer scraping que viole os Termos de Serviço das plataformas | Base já coletada; mídia não é versionada nem redistribuída | Resposta registrada em `docs/base_de_dados.md` §1 |
 | H-CASE-02 | OPCIONAL | Case | Aumentar o crédito do Apify (ou aguardar a renovação mensal em 17/12/2026; a conta atual renova em 17/12/2026) para ampliar a base de 1.672 para 2.000+ Reels e cobrir perfis truncados | A meta do TAPI é 2.000–5.000 publicações; o teto de US$ 5/mês limitou o volume | Análises com `confidence_flag` para suportes baixos | `python -m src.base.unificar` e conferir `docs/base_de_dados.md` §2 |
+| H-CASE-03 | RECOMENDADO | Case | Expandir a base de vídeos (token Creator da Graph API `business_discovery`, ou cookies de sessão para yt-dlp/gallery-dl, ou renovação do Apify em 17/12/2026) e rodar `python -m src.analise.manifesto && python -m src.analise.features && python -m src.analise.classificar` | A análise fecha com 1.672 Reels (abaixo da meta de 2.000) | Análise do top 10% sobre os 151 vídeos já em disco | `python -m src.base.unificar` e conferir `docs/base_de_dados.md` §2 |
+| legal-kokoro-phonemizer | JURÍDICO | 02 | Revisar a licença GPL de `phonemizer`/`espeak-ng` (dependências do `kokoro-onnx`) antes de distribuir o pacote | O áudio gerado não herda a licença, mas a redistribuição do código pode | Kokoro roda localmente; edge-tts desligado por padrão | Parecer registrado no ADR-010 |
+| H-CASE-04 | JURÍDICO | Case | Enviar à organização a minuta de confirmação em `docs/COMPLIANCE_H_CASE_01.md` | Registro formal exigido pelo TAPI | Dossiê técnico pronto | Resposta anexada ao ADR-009 |
 
 ---
 
@@ -96,5 +99,4 @@ Nenhuma conta de rede social é necessária para gerar o `.mp4`.
 
 | ID | Prioridade | Spec | Ação | Impacto | Fallback | Verificação |
 |---|---|---:|---|---|---|---|
-| legal-edge-tts | RECOMENDADO | 02 | Revisar os termos comerciais do serviço edge-tts antes da publicação. | A autorização de uso comercial do endpoint não é explícita. | Usar TTS local com licença revisada. | Revisão jurídica documentada em docs/HUMAN_DEPENDENCIES.md |
 <!-- AUTO:END -->
