@@ -1,0 +1,205 @@
+# =============================================================================
+# 10 perfis de MPE/MEI prioritários para geração de criativos (motion graphics).
+#
+# Critério (premissa editável, ver docs/CRIATIVOS.md): 2 ocupações por segmento
+# de config/cnae_profiles.yaml (5 segmentos => os 5 formatos da pesquisa),
+# priorizando as ocupações MEI mais comuns em cada segmento.
+# Cada perfil traz o "material criativo" (dor, solução, número de destaque,
+# prova, CTA) que alimenta tanto o modo offline (templates) quanto o LLM.
+# Tom Impulso Stone: próximo, simples, sem promessa exagerada.
+# Cores: fundo1/fundo2 (gradiente), destaque, acento, texto (hex).
+# =============================================================================
+version: 1
+
+# Segmentos da base de Reels (dados/) mais próximos de cada segmento CNAE; usados só para
+# DESEMPATAR referências (a base é majoritariamente de educação empreendedora, não de nichos).
+segmentos_base:
+  beleza: [artesanato_varejo, varejo]
+  alimentacao: [alimentacao_delivery, artesanato_varejo]
+  varejo_moda: [varejo, artesanato_varejo, vendas_ecommerce]
+  servicos_tecnicos: [vendas_marketing, precificacao]
+  ensino_servicos_locais: [educacao_empreendedora, empreendedorismo]
+
+# Palavras que a pessoa costuma FALAR para cada ramo (usadas para entender o pedido em voz livre).
+sinonimos:
+  cabeleireira: [cabeleireira, cabeleireiro, cabelo, salão, salao, manicure, unha, unhas, escova, corte, coloração, barbeiro, barbearia]
+  esteticista: [esteticista, maquiadora, maquiagem, make, estética, estetica, pele, sobrancelha, limpeza de pele, depilação, depilacao, cílios, cilios]
+  confeiteira: [confeiteira, confeiteiro, bolo, bolos, doce, doces, brigadeiro, brownie, cupcake, torta, confeitaria, docinhos]
+  marmiteira: [marmita, marmitas, marmiteira, comida, almoço, almoco, quentinha, refeição, refeicao, restaurante, lanche, salgado, salgados, delivery]
+  loja_roupas: [roupa, roupas, loja de roupa, moda, boutique, brechó, brecho, vestido, camiseta, calça, calca, look]
+  bijuteria: [bijuteria, bijuterias, semijoia, semijoias, brinco, colar, pulseira, acessório, acessorio, acessórios, joia]
+  eletricista: [eletricista, elétrica, eletrica, fiação, fiacao, tomada, instalação elétrica, disjuntor, quadro de luz]
+  mecanico: [mecânico, mecanico, oficina, carro, carros, moto, motos, revisão, revisao, freio, óleo, oleo, funilaria]
+  professor_particular: [professor, professora, aula, aulas, reforço, reforco, aula particular, curso, tutor, explicadora, idiomas, inglês, ingles, matemática, matematica]
+  pet_banho_tosa: [pet, banho e tosa, tosa, cachorro, cachorros, cão, gato, gatos, petshop, pet shop, banho]
+
+perfis:
+  - id: cabeleireira
+    nome: "Cabeleireira / Manicure"
+    cnae: "9602-5/01"
+    format_id: 1
+    negocio: "Studio Luz"
+    cta_canal: "WhatsApp"
+    paleta: {fundo1: "#2B1033", fundo2: "#7A2E6B", destaque: "#FFC857", acento: "#FF6FAE", texto: "#FFFFFF"}
+    gancho: "Olha como ela chegou"
+    dor: "Cabelo sem brilho e pontas ressecadas"
+    agitacao: ["Escova que não dura", "Química sem diagnóstico"]
+    solucao: ["Diagnóstico do fio primeiro", "Produto certo pro seu cabelo", "Cuidado com calma"]
+    antes: "Fio opaco e ressecado"
+    depois: "Brilho e alinhamento"
+    destaque: {valor: "1 hora", rotulo: "de cuidado dedicado só pra você"}
+    prova: "Cliente volta todo mês"
+    cta: "Agende pelo WhatsApp. Aceito Pix"
+
+  - id: esteticista
+    nome: "Maquiadora / Esteticista"
+    cnae: "9602-5/02"
+    format_id: 1
+    negocio: "Bela Pele Estética"
+    cta_canal: "WhatsApp"
+    paleta: {fundo1: "#1D2B2A", fundo2: "#3F7F72", destaque: "#F6D6C4", acento: "#FFB4A2", texto: "#FFFFFF"}
+    gancho: "Pele cansada? Olha isso"
+    dor: "Pele sem viço e make que não dura"
+    agitacao: ["Make que escorre no calor", "Pele sem preparo"]
+    solucao: ["Preparo de pele antes", "Make leve e duradoura", "Retoque simples pro dia todo"]
+    antes: "Pele sem viço"
+    depois: "Pele iluminada e uniforme"
+    destaque: {valor: "8 horas", rotulo: "de make firme, sem pesar"}
+    prova: "Noivas e formandas me procuram"
+    cta: "Reserve seu horário no WhatsApp"
+
+  - id: confeiteira
+    nome: "Confeiteira"
+    cnae: "1091-1/02"
+    format_id: 2
+    negocio: "Doce Capricho"
+    cta_canal: "WhatsApp"
+    paleta: {fundo1: "#3B1E12", fundo2: "#B5532F", destaque: "#FFD166", acento: "#FF8FA3", texto: "#FFFFFF"}
+    gancho: "Olha essa textura"
+    dor: "Bolo bonito que não tem sabor"
+    agitacao: ["Massa pronta de pacote", "Recheio econômico demais"]
+    solucao: ["Massa batida na hora", "Recheio generoso", "Cobertura feita do zero"]
+    antes: "Mistura pronta"
+    depois: "Feito do zero"
+    destaque: {valor: "48 h", rotulo: "de antecedência pra encomendar"}
+    prova: "Quem prova sempre volta"
+    cta: "Encomende pelo WhatsApp"
+
+  - id: marmiteira
+    nome: "Marmiteira / Doceira"
+    cnae: "5620-1/04"
+    format_id: 2
+    negocio: "Marmita da Dona Rosa"
+    cta_canal: "WhatsApp"
+    paleta: {fundo1: "#14331F", fundo2: "#2F7D3A", destaque: "#FFE066", acento: "#FF9F1C", texto: "#FFFFFF"}
+    gancho: "Almoço pronto e caseiro"
+    dor: "Sem tempo de cozinhar no almoço"
+    agitacao: ["Fast food todo dia pesa no bolso", "Marmita fria e sem graça"]
+    solucao: ["Comida caseira fresquinha", "Porção caprichada", "Entrega no horário"]
+    antes: "Marmita fria de ontem"
+    depois: "Comida quentinha do dia"
+    destaque: {valor: "R$ 18", rotulo: "marmita completa, entrega inclusa no bairro"}
+    prova: "Mais de 40 clientes fixos"
+    cta: "Peça pelo WhatsApp. Aceito Pix"
+
+  - id: loja_roupas
+    nome: "Loja de roupas e acessórios"
+    cnae: "4781-4/00"
+    format_id: 3
+    negocio: "Closet da Bia"
+    cta_canal: "WhatsApp"
+    paleta: {fundo1: "#111827", fundo2: "#374151", destaque: "#F472B6", acento: "#FBBF24", texto: "#FFFFFF"}
+    gancho: "Preciso te mostrar isso"
+    dor: "Peça que veste bem e cabe no bolso"
+    agitacao: ["Procura em tudo quanto é loja", "Tamanho que nunca serve"]
+    solucao: ["Peças escolhidas a dedo", "Caimento que valoriza", "Serve pro trabalho e pro fim de semana"]
+    antes: "Horas procurando"
+    depois: "Achou a peça certa"
+    destaque: {valor: "até 12x", rotulo: "no cartão ou Pix com desconto"}
+    prova: "Eu indico de olhos fechados"
+    cta: "Chama no WhatsApp e pede o seu tamanho"
+
+  - id: bijuteria
+    nome: "Fabricante de bijuterias"
+    cnae: "3212-4/00"
+    format_id: 3
+    negocio: "Ateliê Fio de Ouro"
+    cta_canal: "Instagram"
+    paleta: {fundo1: "#2D1B3D", fundo2: "#6D4C8F", destaque: "#F5D76E", acento: "#E8A0BF", texto: "#FFFFFF"}
+    gancho: "Fiz isso com minhas mãos"
+    dor: "Acessório igual ao de todo mundo"
+    agitacao: ["Peça que escurece rápido", "Modelo repetido em toda vitrine"]
+    solucao: ["Design exclusivo", "Banho que dura mais", "Feito à mão em pequenas séries"]
+    antes: "Peça comum"
+    depois: "Peça com identidade"
+    destaque: {valor: "6 meses", rotulo: "de garantia no banho"}
+    prova: "Cada peça tem história"
+    cta: "Chama no direct e escolhe a sua"
+
+  - id: eletricista
+    nome: "Eletricista"
+    cnae: "4321-5/00"
+    format_id: 4
+    negocio: "Eletro Seguro"
+    cta_canal: "WhatsApp"
+    paleta: {fundo1: "#0B1B33", fundo2: "#14407A", destaque: "#FFC300", acento: "#FF4D4D", texto: "#FFFFFF"}
+    gancho: "Isso aqui é perigo"
+    dor: "Fio derretido na tomada"
+    agitacao: ["Aparelho queimado", "Conta de luz mais cara", "Risco de incêndio em casa"]
+    solucao: ["Troca da fiação", "Disjuntor certo instalado", "Teste ponto por ponto"]
+    antes: "Fiação antiga"
+    depois: "Instalação segura"
+    destaque: {valor: "Orçamento", rotulo: "rápido e sem compromisso"}
+    prova: "Serviço limpo e garantido"
+    cta: "Orçamento rápido pelo WhatsApp"
+
+  - id: mecanico
+    nome: "Mecânico de veículos"
+    cnae: "4520-0/01"
+    format_id: 4
+    negocio: "Oficina do Zé"
+    cta_canal: "WhatsApp"
+    paleta: {fundo1: "#1A1A1A", fundo2: "#3A3A3A", destaque: "#FF6B00", acento: "#FFD60A", texto: "#FFFFFF"}
+    gancho: "Esse barulho não é normal"
+    dor: "Barulho estranho no freio"
+    agitacao: ["Pastilha gasta estraga o disco", "Conserto fica o triplo do preço"]
+    solucao: ["Diagnóstico honesto", "Peça mostrada pra você", "Serviço com garantia"]
+    antes: "Freio rangendo"
+    depois: "Freio novo e silencioso"
+    destaque: {valor: "Revisão", rotulo: "de freio sem custo na avaliação"}
+    prova: "Mostro a peça trocada"
+    cta: "Agende pelo WhatsApp"
+
+  - id: professor_particular
+    nome: "Professor particular"
+    cnae: "8599-6/99"
+    format_id: 5
+    negocio: "Aula com a Prof. Lia"
+    cta_canal: "WhatsApp"
+    paleta: {fundo1: "#10243E", fundo2: "#2A6F97", destaque: "#FFD60A", acento: "#61E294", texto: "#FFFFFF"}
+    gancho: "Ninguém te conta isso"
+    dor: "Estudar horas e não fixar nada"
+    agitacao: ["Estudar tudo no último dia", "Decorar sem entender"]
+    solucao: ["Plano de estudo na sua rotina", "Revisão espaçada", "Exercícios que caem na prova"]
+    antes: "Estudo sem método"
+    depois: "Rotina com constância"
+    destaque: {valor: "3x", rotulo: "por semana valem mais que 7 no cansaço"}
+    prova: "Alunos aprovados todo semestre"
+    cta: "Me chama no WhatsApp e monta o seu plano. Salva esse vídeo, porque"
+
+  - id: pet_banho_tosa
+    nome: "Pet sitter / Banho e tosa"
+    cnae: "9609-2/08"
+    format_id: 5
+    negocio: "Pet Cheirinho"
+    cta_canal: "WhatsApp"
+    paleta: {fundo1: "#12314D", fundo2: "#2E86AB", destaque: "#FFE066", acento: "#FF8FAB", texto: "#FFFFFF"}
+    gancho: "Seu pet merece isso"
+    dor: "Pet estressado no banho"
+    agitacao: ["Banho com pressa e susto", "Tosa que machuca"]
+    solucao: ["Atendimento calmo", "Produto próprio pra pele dele", "Busca e entrega em casa"]
+    antes: "Pelo embolado"
+    depois: "Cheirosinho e feliz"
+    destaque: {valor: "1 pet", rotulo: "por vez, sem fila e sem estresse"}
+    prova: "Tutor que volta sempre"
+    cta: "Marque o horário no WhatsApp"

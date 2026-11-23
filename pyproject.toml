@@ -21,6 +21,10 @@ ml = [
   "mediapipe", "kokoro-onnx", "piper-tts"
 ]
 agpl = ["ultralytics"]
+criativos = [
+  "langchain>=1.0", "langchain-core>=1.0", "langchain-anthropic", "langchain-google-genai",
+  "langchain-mcp-adapters"
+]
 coleta = [
   "apify-client>=1.7", "google-api-python-client>=2.100", "isodate>=0.6",
   "yt-dlp>=2024.10.0", "pandas>=2.0", "pyarrow>=14.0", "requests>=2.31", "python-dotenv"

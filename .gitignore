@@ -30,3 +30,8 @@ dados/
 !docs/**/*.png
 !tests/fixtures/*.jpg
 _quarentena_para_apagar/
+
+# assets estáticos do front (servidos pelo Vercel)
+!src/web/logo.png
+!src/web/tutorial.mp4
+!src/web/tutorial.jpg

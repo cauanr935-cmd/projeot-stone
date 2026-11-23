@@ -44,8 +44,7 @@ def carregar_referencia(pasta: Path = REFERENCIA, formato: str | None = None) ->
     return rows
 
 
-def _nota_feature(valor: float, ref: np.ndarray) -> float:
-    p5, p25, p75, p95 = np.percentile(ref, [5, 25, 75, 95])
+def _nota_percentis(valor: float, p5: float, p25: float, p75: float, p95: float) -> float:
     if p25 <= valor <= p75:
         return 100.0
     if valor < p25:
@@ -53,6 +52,10 @@ def _nota_feature(valor: float, ref: np.ndarray) -> float:
         return float(np.interp(valor, [p5 - folga, p5, p25], [0, 40, 100]))
     folga = max(p95 - p75, 1e-9)
     return float(np.interp(valor, [p75, p95, p95 + folga], [100, 40, 0]))
+
+
+def _nota_feature(valor: float, ref: np.ndarray) -> float:
+    return _nota_percentis(valor, *np.percentile(ref, [5, 25, 75, 95]))
 
 
 def pontuar(feats: dict, referencia: list[dict]) -> dict:

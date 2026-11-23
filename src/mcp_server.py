@@ -191,6 +191,83 @@ async def assemble_and_render_reel(edit_plan_path: str | None = None, edit_plan:
     return await asyncio.to_thread(render, edit_plan, target, commercial)
 
 
+# ------------------------------------------------------------------ criativos (motion graphics)
+@mcp.resource("stone-criativos://perfis", name="Perfis prioritários de MPE",
+              description="10 perfis de MPE com material de marca, dor, solução, CTA e formato.")
+def perfis_resource() -> str:
+    from src.criativos.spec import carregar_perfis
+    return json.dumps(carregar_perfis(), ensure_ascii=False)
+
+
+@mcp.prompt("criar_criativo_motion")
+def criar_criativo_motion(perfil_id: str, instrucoes: str = "") -> str:
+    return (f"Crie um criativo em motion graphics para o perfil '{perfil_id}'. 1) Chame briefing_criativo; "
+            "2) escreva você mesmo o CriativoSpec (JSON) seguindo regras e schema; 3) chame "
+            f"renderizar_criativo com o spec; 4) se a auditoria reprovar, corrija e renderize de novo. {instrucoes}")
+
+
+@mcp.tool()
+def listar_perfis_criativos() -> list[dict]:
+    from src.criativos.spec import carregar_perfis
+    return [{"id": k, "nome": v["nome"], "cnae": v["cnae"], "formato": v["format_id"]}
+            for k, v in carregar_perfis().items()]
+
+
+@mcp.tool()
+def briefing_criativo(perfil_id: str, negocio: str | None = None, formato_id: int | None = None) -> dict:
+    """Briefing para a IA hospedada (Claude Code/Gemini) escrever o CriativoSpec: perfil, framework, regras, schema."""
+    from src.criativos.llm import briefing
+    return briefing(perfil_id, negocio, formato_id)
+
+
+@mcp.tool()
+async def renderizar_criativo(spec: dict, com_voz: bool = True) -> dict:
+    """Valida e renderiza um CriativoSpec escrito pela IA em MP4 1080x1920 (auditado)."""
+    from src.criativos import servico
+    return await asyncio.to_thread(servico.renderizar_json, spec, None, com_voz)
+
+
+@mcp.tool()
+async def gerar_criativo_perfil(perfil_id: str, negocio: str | None = None, formato_id: int | None = None,
+                                instrucoes: str | None = None, com_voz: bool = True) -> dict:
+    """Gera o criativo de um perfil: LangChain (Claude/Gemini, se houver chave) ou template offline."""
+    from src.criativos import servico
+    return await asyncio.to_thread(servico.gerar_criativo, perfil_id, None, negocio, formato_id, instrucoes, com_voz)
+
+
+@mcp.tool()
+def interpretar_pedido(texto: str, estado: dict | None = None) -> dict:
+    """Entende um pedido em linguagem livre ("sou confeiteira, Doce Sonho, quero divulgar bolo de pote por R$ 12").
+
+    Devolve briefing, o que falta e uma `pergunta` para o usuário. Se `pronto` for falso, pergunte ao usuário e chame de novo
+    passando o `estado` devolvido. Quando `pronto`, chame gerar_criativo_pedido com o `briefing`."""
+    from src.criativos import conversa
+    return conversa.interpretar(texto, estado)
+
+
+@mcp.tool()
+async def gerar_criativo_pedido(briefing: dict, com_voz: bool = True) -> dict:
+    """Gera o criativo (MP4 1080x1920 auditado) a partir do briefing de interpretar_pedido. Retorna caminho, duração e raciocínio."""
+    from src.criativos import conversa
+    r = await asyncio.to_thread(conversa.gerar_pedido, briefing, com_voz)
+    return {"pedido_id": r["pedido_id"], **(r["saida"] or {}), "trace": [{"titulo": t["titulo"], "resumo": t["resumo"]} for t in r["trace"]]}
+
+
+@mcp.tool()
+async def transcrever_audio(caminho: str, ctx: Context | None = None) -> dict:
+    """Transcreve um áudio de fala PT-BR (arquivo dentro do workspace) para texto, 100% local. Use o texto em interpretar_pedido."""
+    from src.criativos import transcricao
+    roots = await get_roots(ctx) if ctx else [Path(os.getenv("REELS_WORKSPACE", "./workspace")).resolve()]
+    return await asyncio.to_thread(transcricao.transcrever_arquivo, resolve_allowed_path(caminho, roots))
+
+
+@mcp.tool()
+async def gerar_criativos_lote(perfis: list[str] | None = None, com_voz: bool = True) -> list[dict]:
+    """Gera os criativos dos perfis prioritários (todos se `perfis` omitido)."""
+    from src.criativos import servico
+    return await asyncio.to_thread(servico.gerar_lote, perfis, None, com_voz)
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--http", action="store_true")

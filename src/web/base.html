@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#07100c">
+<link rel="icon" href="/logo.png">
+<title>Base de referência — Impulso Criativos</title>
+<style>
+:root{--bg:#07100c;--panel:#0f1b16;--line:#ffffff14;--txt:#eef5f0;--mut:#93a79b;--g:#00d66c;--g2:#7dffb5;--warn:#ffc857;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(1200px 600px at 80% -10%,#0f3d27 0,transparent 60%),var(--bg);color:var(--txt);min-height:100vh}
+a{color:var(--g2)}button,select,input{font:inherit;color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+nav{display:flex;justify-content:space-between;align-items:center;padding:18px 0;gap:12px;flex-wrap:wrap}
+.logo{display:flex;gap:10px;align-items:center;text-decoration:none;color:var(--txt)}.logo img{height:38px;display:block}
+.menu{display:flex;gap:4px;background:#ffffff08;border:1px solid var(--line);padding:4px;border-radius:99px;flex-wrap:wrap}
+.menu a{color:var(--mut);text-decoration:none;font-size:.9rem;padding:8px 16px;border-radius:99px;font-weight:600;white-space:nowrap}.menu a:hover{color:var(--txt)}.menu a.on{background:var(--g);color:#04140b}
+h1{font-size:clamp(1.7rem,4vw,2.4rem);letter-spacing:-.03em;margin:26px 0 8px}.lead{color:var(--mut);line-height:1.55;max-width:760px;margin:0}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin:22px 0}.stat{background:#ffffff08;border:1px solid var(--line);border-radius:16px;padding:12px 18px}.stat b{display:block;font-size:1.5rem;letter-spacing:-.02em}.stat span{color:var(--mut);font-size:.8rem}
+.filtros{display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:12px;position:sticky;top:8px;z-index:5;backdrop-filter:blur(10px)}
+.filtros input,.filtros select{background:#00000040;border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:150px}
+.filtros input{flex:1;min-width:200px}.filtros label{display:flex;gap:6px;align-items:center;color:var(--mut);font-size:.88rem;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;margin:20px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;transition:.25s}.card:hover{transform:translateY(-4px);border-color:#ffffff40}
+.th{aspect-ratio:9/12;background:linear-gradient(160deg,#13241d,#0b1a2a);position:relative;display:grid;place-items:center;color:var(--mut);font-size:.8rem;text-align:center;padding:10px}
+.th img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tag{position:absolute;top:10px;left:10px;font-size:.66rem;font-weight:700;background:#000b;border:1px solid #ffffff30;padding:3px 8px;border-radius:99px;letter-spacing:.05em}.tag.t{color:var(--g2)}
+.sc{position:absolute;bottom:10px;right:10px;background:var(--g);color:#04140b;font-weight:800;font-size:.78rem;padding:4px 9px;border-radius:99px}
+.bd{padding:12px 14px 14px;display:grid;gap:6px}.bd b{font-size:.92rem}.bd small{color:var(--mut)}.gan{font-size:.86rem;color:#d5e3da;line-height:1.4}
+.m{display:flex;gap:10px;flex-wrap:wrap;color:var(--mut);font-size:.76rem}
+.pg{display:flex;justify-content:center;gap:10px;align-items:center;margin:10px 0 50px;color:var(--mut)}
+.btn{background:#ffffff10;border:1px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer}.btn:disabled{opacity:.35;cursor:default}
+#modal{position:fixed;inset:0;background:#050a08f2;z-index:50;display:none;overflow:auto;padding:24px}#modal.on{display:block}
+.mc{max-width:880px;margin:0 auto;display:grid;grid-template-columns:300px 1fr;gap:28px}@media(max-width:760px){.mc{grid-template-columns:1fr}}
+.mc video,.mc .vz{width:100%;border-radius:20px;background:#000;aspect-ratio:9/16;object-fit:cover}
+.mc h2{margin:0 0 6px}.mc p{color:#c3d2c9;line-height:1.55}.chips{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.chip{font-size:.8rem;background:#ffffff0d;border:1px solid var(--line);padding:5px 11px;border-radius:99px}
+.note{background:#ffc85712;border:1px solid #ffc85730;color:#f3dca3;border-radius:14px;padding:12px 16px;font-size:.88rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav><a class="logo" href="/"><img src="/logo.png" alt="Impulso Stone"></a>
+    <div class="menu"><a href="/#criar">Criar</a><a href="/#tutorial">Tutorial</a><a href="/#praticas">Boas práticas</a><a href="/base" class="on">Base de referência</a><a href="/galeria">Exemplos</a></div></nav>
+  <h1>Base de referência</h1>
+  <p class="lead">Os Reels reais de empreendedores brasileiros que servem de modelo. O sistema olha o <b>top 10%</b> (os que mais engajaram, comparado ao tamanho do perfil) para decidir o formato, o gancho e o ritmo do seu vídeo. Clique em um Reel para ver o gancho e abrir no Instagram.</p>
+  <div class="stats" id="stats"></div>
+  <div class="filtros">
+    <input id="q" type="search" placeholder="Buscar por perfil ou legenda…" aria-label="Buscar">
+    <select id="formato" aria-label="Formato"><option value="">Todos os formatos</option></select>
+    <select id="segmento" aria-label="Segmento"><option value="">Todos os segmentos</option></select>
+    <select id="ordem" aria-label="Ordenar"><option value="score">Melhor desempenho</option><option value="views">Mais views</option><option value="eng">Mais engajamento</option><option value="recentes">Mais recentes</option></select>
+    <label><input type="checkbox" id="top10" checked style="min-width:0"> só top 10%</label>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="pg"><button class="btn" id="ant">← Anterior</button><span id="pgi"></span><button class="btn" id="prox">Próxima →</button></div>
+</div>
+<div id="modal"></div>
+<script>
+const $=s=>document.querySelector(s);const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=n=>n==null?"–":n>=1e6?(n/1e6).toFixed(1)+" mi":n>=1e3?(n/1e3).toFixed(1)+" mil":n;
+let pagina=1,itens=[];
+async function api(u){const r=await fetch(u);if(!r.ok)throw new Error((await r.json().catch(()=>({}))).error||r.status);return r.json()}
+async function init(){
+  try{const r=await api("/api/base/resumo");
+    if(!r.disponivel){$("#grid").innerHTML='<div class="note">A base não está disponível neste ambiente (pasta dados/).</div>';return}
+    $("#stats").innerHTML=[[r.reels.toLocaleString("pt-BR"),"Reels"],[r.perfis,"perfis"],[r.top10,"no top 10%"],[fmt(r.mediana_views),"views (mediana)"],[(r.mediana_eng*100).toFixed(1)+"%","engajamento (mediana)"],[r.coleta,"última coleta"]].map(([a,b])=>`<div class="stat"><b>${a}</b><span>${b}</span></div>`).join("");
+    $("#formato").innerHTML+=r.formatos.map(f=>`<option value="${f.id}">${f.nome} (${f.n} no top 10%)</option>`).join("");
+    $("#segmento").innerHTML+=r.segmentos.map(s=>`<option value="${s.id}">${esc(s.id.replaceAll("_"," "))} (${s.n})</option>`).join("");
+  }catch(e){$("#grid").innerHTML=`<div class="note">Sem conexão com o backend (${esc(e.message)}).</div>`;return}
+  carregar();
+}
+async function carregar(){
+  const p=new URLSearchParams({pagina,ordem:$("#ordem").value});
+  if($("#q").value.trim())p.set("q",$("#q").value.trim());if($("#formato").value)p.set("formato",$("#formato").value);
+  if($("#segmento").value)p.set("segmento",$("#segmento").value);if($("#top10").checked)p.set("top10","1");
+  const r=await api("/api/base?"+p);itens=r.itens;
+  $("#grid").innerHTML=itens.length?itens.map((x,i)=>`<div class="card" onclick="abrir(${i})">
+    <div class="th">${x.thumb?`<img loading="lazy" src="/api/base/${x.id}/thumb" alt="">`:`@${esc(x.perfil)}`}
+      ${x.top10?`<span class="tag t">TOP 10% · ${esc(x.formato_nome||"")}</span>`:""}${x.score!=null?`<span class="sc">${x.score}×</span>`:""}</div>
+    <div class="bd"><b>@${esc(x.perfil)}</b><small>${esc(x.segmento.replaceAll("_"," "))}</small>
+      ${x.gancho?`<div class="gan">“${esc(x.gancho)}”</div>`:`<div class="gan" style="color:var(--mut)">${esc(x.legenda.slice(0,90))}</div>`}
+      <div class="m"><span>▶ ${fmt(x.views)}</span><span>♥ ${fmt(x.curtidas)}</span><span>${x.duracao_s??"–"}s</span></div></div></div>`).join(""):'<div class="note" style="grid-column:1/-1">Nenhum Reel com esses filtros.</div>';
+  $("#pgi").textContent=`Página ${r.pagina} de ${r.paginas} · ${r.total.toLocaleString("pt-BR")} Reels`;
+  $("#ant").disabled=pagina<=1;$("#prox").disabled=pagina>=r.paginas;
+}
+function abrir(i){const x=itens[i];
+  $("#modal").innerHTML=`<div class="mc"><div>${x.video?`<video src="/api/base/${x.id}/video" controls autoplay playsinline poster="${x.thumb?`/api/base/${x.id}/thumb`:""}"></video>`:(x.thumb?`<img class="vz" src="/api/base/${x.id}/thumb" alt="">`:`<div class="vz"></div>`)}</div>
+   <div><button class="btn" onclick="fechar()">← Voltar</button><h2 style="margin-top:16px">@${esc(x.perfil)}</h2>
+   <div class="chips"><span class="chip">score relativo <b>${x.score??"–"}×</b></span><span class="chip">eng. ${x.eng!=null?(x.eng*100).toFixed(1)+"%":"–"}</span><span class="chip">▶ ${fmt(x.views)}</span><span class="chip">♥ ${fmt(x.curtidas)}</span><span class="chip">💬 ${fmt(x.comentarios)}</span><span class="chip">${x.duracao_s??"–"}s</span><span class="chip">${fmt(x.seguidores)} seguidores</span>${x.formato_nome?`<span class="chip">formato <b>${esc(x.formato_nome)}</b></span>`:""}</div>
+   ${x.gancho?`<p><b>Gancho (primeiros 3 s):</b> “${esc(x.gancho)}”</p>`:""}<p>${esc(x.legenda)}</p>
+   <p><a class="btn" style="text-decoration:none;display:inline-block;color:var(--txt)" target="_blank" rel="noopener" href="${esc(x.url)}">Ver no Instagram ↗</a></p>
+   ${x.video?"":'<div class="note">O arquivo de vídeo não está disponível localmente; use o link do Instagram.</div>'}</div></div>`;
+  $("#modal").classList.add("on");document.body.style.overflow="hidden"}
+function fechar(){$("#modal").classList.remove("on");$("#modal").innerHTML="";document.body.style.overflow=""}
+addEventListener("keydown",e=>e.key==="Escape"&&fechar());
+let tm;["q"].forEach(id=>$("#"+id).addEventListener("input",()=>{clearTimeout(tm);tm=setTimeout(()=>{pagina=1;carregar()},300)}));
+["formato","segmento","ordem","top10"].forEach(id=>$("#"+id).addEventListener("change",()=>{pagina=1;carregar()}));
+$("#ant").onclick=()=>{pagina--;carregar();scrollTo(0,0)};$("#prox").onclick=()=>{pagina++;carregar();scrollTo(0,0)};
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#07100c">
+<link rel="icon" href="/logo.png">
+<title>Impulso Criativos — fale e receba seu Reel</title>
+<style>
+:root{--bg:#07100c;--panel:#0f1b16;--panel2:#13241d;--line:#ffffff14;--txt:#eef5f0;--mut:#93a79b;--g:#00d66c;--g2:#7dffb5;--warn:#ffc857;--err:#ff7b7b;
+ font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(1200px 600px at 80% -10%,#0f3d27 0,transparent 60%),radial-gradient(900px 500px at -10% 10%,#0b2a3d 0,transparent 55%),var(--bg);color:var(--txt);min-height:100vh}
+a{color:var(--g2)}button{font:inherit;color:inherit}
+.wrap{max-width:980px;margin:0 auto;padding:0 24px}
+nav{display:flex;justify-content:space-between;align-items:center;padding:20px 0;gap:12px;flex-wrap:wrap}
+.logo{font-weight:800;letter-spacing:-.02em;font-size:1.1rem;display:flex;gap:10px;align-items:center}
+.logo img{height:38px;display:block}.logo i{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--g),#0a8f48);display:grid;place-items:center;color:#04140b;font-style:normal;font-weight:900}
+.menu{display:flex;gap:4px;background:#ffffff08;border:1px solid var(--line);padding:4px;border-radius:99px}
+.menu a{color:var(--mut);text-decoration:none;font-size:.9rem;padding:8px 16px;border-radius:99px;font-weight:600;white-space:nowrap}
+.menu a:hover{color:var(--txt)}.menu a.on{background:var(--g);color:#04140b}
+section.pg{display:none}section.pg.on{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}}
+/* criar */
+.hero{text-align:center;padding:clamp(24px,7vh,70px) 0 18px}
+.hero h1{font-size:clamp(2rem,5vw,3.3rem);line-height:1.05;margin:0 0 12px;letter-spacing:-.035em}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,var(--g),var(--g2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--mut);font-size:1.05rem;margin:0 auto;max-width:560px;line-height:1.55}
+.search{margin:30px auto 0;max-width:760px;display:flex;align-items:flex-end;gap:10px;background:#ffffff0c;border:1px solid #ffffff26;border-radius:34px;padding:10px 10px 10px 24px;box-shadow:0 20px 50px -25px #000;transition:.25s}
+.search:focus-within{border-color:var(--g);box-shadow:0 0 0 4px #00d66c22,0 20px 50px -25px #000}
+.search textarea{flex:1;background:none;border:0;outline:0;color:var(--txt);font:inherit;font-size:1.08rem;resize:none;padding:10px 0;max-height:150px;line-height:1.4}
+.search textarea::placeholder{color:#7f948a}
+.ib{width:52px;height:52px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;flex:none;transition:.2s}
+.mic{background:linear-gradient(135deg,var(--g),#0a9a4e);color:#04140b;position:relative}
+.mic:hover{transform:scale(1.06)}
+.mic.rec{background:#ff4d4d;color:#fff;animation:pulse 1.3s infinite}
+.mic.busy{opacity:.6;cursor:wait}
+@keyframes pulse{0%{box-shadow:0 0 0 0 #ff4d4d88}100%{box-shadow:0 0 0 22px #ff4d4d00}}
+.send{background:#ffffff14;color:var(--txt)}.send:hover{background:#ffffff26}
+.send:disabled{opacity:.35;cursor:default}
+.status{min-height:26px;margin-top:14px;color:var(--g2);font-size:.95rem;display:flex;justify-content:center;align-items:center;gap:10px}
+.bars{display:inline-flex;gap:3px;align-items:center;height:18px}.bars i{width:3px;background:var(--g2);border-radius:3px;height:4px;transition:height .08s}
+.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:20px}
+.ex{background:#ffffff0a;border:1px solid var(--line);color:#cfe0d6;padding:9px 15px;border-radius:99px;font-size:.86rem;cursor:pointer;transition:.2s}
+.ex:hover{border-color:var(--g);color:#fff}
+.tutlink{display:inline-flex;gap:8px;align-items:center;margin-top:22px;color:var(--mut);text-decoration:none;font-size:.9rem;border-bottom:1px dashed #ffffff30;padding-bottom:2px;cursor:pointer;background:none;border-top:0;border-left:0;border-right:0}
+.tutlink:hover{color:var(--g2)}
+/* conversa */
+#chat{max-width:760px;margin:26px auto 0;display:grid;gap:14px}
+.msg{padding:14px 18px;border-radius:20px;max-width:88%;line-height:1.5;animation:fade .3s;font-size:.98rem}
+.msg.u{justify-self:end;background:#00d66c1f;border:1px solid #00d66c40}
+.msg.a{justify-self:start;background:var(--panel);border:1px solid var(--line)}
+.msg .tag{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--g2);font-weight:700;display:block;margin-bottom:6px}
+.entendi{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.entendi span{font-size:.78rem;background:#ffffff0d;border:1px solid var(--line);padding:4px 10px;border-radius:99px;color:#d5e3da}
+.q{font-weight:600;font-size:1.05rem}
+.act{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.btn{background:linear-gradient(135deg,var(--g),#0a9a4e);color:#04140b;border:0;font-weight:800;padding:11px 18px;border-radius:14px;cursor:pointer;text-decoration:none;display:inline-block}
+.btn.sec{background:#ffffff10;color:var(--txt);border:1px solid var(--line);font-weight:600}
+.btn:hover{filter:brightness(1.08)}.btn:disabled{opacity:.5;cursor:wait}
+/* resultado */
+.result{display:grid;grid-template-columns:300px 1fr;gap:30px;margin:30px auto 0;max-width:860px;animation:fade .4s;align-items:start}
+@media(max-width:760px){.result{grid-template-columns:1fr}.phone{margin:0 auto}}
+.phone{width:290px;border-radius:40px;padding:10px;background:linear-gradient(145deg,#2a3a32,#0b120e);box-shadow:0 40px 80px -20px #000,0 0 0 1px #ffffff1f inset}
+.phone .scr{border-radius:32px;overflow:hidden;aspect-ratio:9/16;background:#000}
+.phone video{width:100%;height:100%;object-fit:cover;display:block}
+.result h2{margin:0 0 6px;font-size:1.6rem;letter-spacing:-.02em}
+.trace{margin-top:18px;display:grid;gap:8px}
+.trace div{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-size:.88rem;color:#c3d2c9;line-height:1.45}
+.trace b{color:var(--txt);display:block;font-size:.9rem}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid #ffffff44;border-top-color:var(--g2);border-radius:50%;animation:r .8s linear infinite;flex:none}
+@keyframes r{to{transform:rotate(360deg)}}
+.note{background:#ffc85712;border:1px solid #ffc85730;color:#f3dca3;border-radius:14px;padding:12px 16px;font-size:.88rem;line-height:1.5}
+.note.err{background:#ff7b7b14;border-color:#ff7b7b40;color:#ffc6c6}
+/* tutorial / práticas */
+.pgh{padding:34px 0 8px}.pgh h1{margin:0 0 8px;font-size:clamp(1.7rem,4vw,2.4rem);letter-spacing:-.03em}.pgh p{color:var(--mut);margin:0;line-height:1.55}
+.tut{display:grid;grid-template-columns:300px 1fr;gap:34px;margin-top:22px;align-items:start}
+@media(max-width:760px){.tut{grid-template-columns:1fr}}
+.steps{display:grid;gap:12px;counter-reset:s}
+.steps div{counter-increment:s;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px 18px 16px 62px;position:relative;line-height:1.5}
+.steps div:before{content:counter(s);position:absolute;left:16px;top:14px;width:32px;height:32px;border-radius:50%;background:var(--g);color:#04140b;font-weight:800;display:grid;place-items:center}
+.steps b{display:block;margin-bottom:2px}.steps span{color:var(--mut);font-size:.92rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;margin:22px 0 60px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:20px}
+.card h3{margin:0 0 8px;font-size:1.05rem}.card p{margin:0;color:#b9cabf;font-size:.92rem;line-height:1.55}
+.card .ok{color:var(--g2);font-weight:700;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase}
+.card q{display:block;margin-top:10px;font-size:.88rem;color:#e6efe9;border-left:2px solid var(--g);padding-left:10px;quotes:none}
+footer{border-top:1px solid var(--line);color:var(--mut);font-size:.82rem;padding:22px 0 44px;margin-top:50px;line-height:1.6}
+.sr{position:absolute;left:-9999px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a class="logo" href="/"><img src="/logo.png" alt="Impulso Stone"></a>
+    <div class="menu" role="tablist">
+      <a href="#criar" data-pg="criar" class="on">Criar</a><a href="#tutorial" data-pg="tutorial">Tutorial</a><a href="#praticas" data-pg="praticas">Boas práticas</a><a href="/base">Base de referência</a><a href="/galeria">Exemplos</a>
+    </div>
+  </nav>
+
+  <!-- CRIAR -->
+  <section class="pg on" id="pg-criar">
+    <div class="hero">
+      <h1>O que você quer <em>criar hoje?</em></h1>
+      <p>Aperte o microfone e fale: qual é o seu negócio e o que quer divulgar. Se faltar algo, eu pergunto. Em cerca de um minuto seu Reel fica pronto.</p>
+      <div class="search" id="search">
+        <textarea id="txt" rows="1" aria-label="Descreva o vídeo que você quer" placeholder="Ex.: Tenho uma confeitaria chamada Doce Sonho e quero divulgar meu bolo de pote por R$ 12…"></textarea>
+        <button class="ib send" id="send" aria-label="Enviar" title="Enviar (Enter)" disabled><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5v-6.9l9-1.6-9-1.6V3.5L22 12z"/></svg></button>
+        <button class="ib mic" id="mic" aria-label="Falar" title="Falar"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15a4 4 0 0 0 4-4V6a4 4 0 0 0-8 0v5a4 4 0 0 0 4 4zm6-4a6 6 0 0 1-12 0H4a8 8 0 0 0 7 7.9V22h2v-3.1A8 8 0 0 0 20 11z"/></svg></button>
+      </div>
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+      <div class="chips" id="exemplos"></div>
+      <button class="tutlink" onclick="ir('tutorial')">▶ Como funciona (vídeo de 1 minuto)</button>
+    </div>
+    <div id="chat"></div>
+    <div id="out"></div>
+  </section>
+
+  <!-- TUTORIAL -->
+  <section class="pg" id="pg-tutorial">
+    <div class="pgh"><h1>Tutorial rápido</h1><p>Em um minuto você vê como é: falar, responder e receber o Reel.</p></div>
+    <div class="tut">
+      <div class="phone"><div class="scr"><video id="tvid" src="/tutorial.mp4" poster="/tutorial.jpg" controls playsinline preload="metadata"></video></div></div>
+      <div class="steps">
+        <div><b>Aperte o microfone</b><span>O navegador pede permissão uma vez. Prefere digitar? Escreva na caixa e aperte Enter.</span></div>
+        <div><b>Conte seu negócio</b><span>Nome, o que vende, preço ou promoção e o tom do vídeo. Já tem roteiro? Leia ele em voz alta.</span></div>
+        <div><b>Responda se eu perguntar</b><span>Se faltar algo importante, eu falo a pergunta e já fico ouvindo. Diga “pode seguir” para usar o padrão.</span></div>
+        <div><b>Receba e ajuste</b><span>O Reel aparece na tela. Quer mudar? Aperte “Ajustar” e fale, por exemplo: “mais divertido”.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOAS PRÁTICAS -->
+  <section class="pg" id="pg-praticas">
+    <div class="pgh"><h1>Boas práticas</h1><p>Pequenos cuidados que deixam o Reel melhor e o pedido mais rápido.</p></div>
+    <div class="cards">
+      <div class="card"><span class="ok">Ao falar</span><h3>Lugar silencioso, frases curtas</h3><p>Ruído atrapalha a transcrição. Fale perto do aparelho e sem pressa.</p></div>
+      <div class="card"><span class="ok">O que dizer</span><h3>Negócio, produto e preço</h3><p>Quanto mais concreto, melhor o vídeo.</p><q>“Sou eletricista, minha empresa é a Eletro Seguro, atendo no mesmo dia por R$ 90 a visita.”</q></div>
+      <div class="card"><span class="ok">Preço e promessa</span><h3>Só o que é verdade</h3><p>Use preços, prazos e garantias reais. O vídeo repete o que você disser.</p></div>
+      <div class="card"><span class="ok">Tom</span><h3>Diga como quer o vídeo</h3><p>“Divertido”, “direto”, “emocional” ou “profissional”. Se não disser, uso o tom do seu ramo.</p></div>
+      <div class="card"><span class="ok">Roteiro próprio</span><h3>Já escreveu? Fale “roteiro:”</h3><p>Diga a palavra “roteiro” e leia o texto, com pelo menos 3 frases. A primeira vira o gancho; a última, o convite para o contato.</p></div>
+      <div class="card"><span class="ok">Um vídeo por vez</span><h3>Ajuste em vez de recomeçar</h3><p>Depois do Reel pronto, use “Ajustar” para pedir mudanças sem repetir tudo.</p></div>
+      <div class="card"><span class="ok">Privacidade</span><h3>Seu áudio fica na máquina</h3><p>A transcrição roda localmente e o áudio é apagado em seguida.</p></div>
+      <div class="card"><span class="ok">Antes de publicar</span><h3>Revise o texto na tela</h3><p>Confira nome, preço e contato antes de postar no Instagram.</p></div>
+    </div>
+  </section>
+
+  <footer>Voz e vídeo gerados localmente (Pillow + ffmpeg, Kokoro e Whisper), sem custo por vídeo. Prefere usar com sua própria mídia? <a href="/editor">Editor com vídeos próprios →</a> · Pelo Claude: <a href="/base">veja a base de referência</a>; o MCP está no README.</footer>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const EXEMPLOS=["Tenho um salão chamado Studio Luz e quero divulgar escova progressiva por R$ 120",
+ "Sou eletricista, minha empresa é a Eletro Seguro, atendo no mesmo dia",
+ "Quero um vídeo divertido das minhas marmitas, Sabor Caseiro, a R$ 18 no WhatsApp",
+ "Dou aula particular de matemática e quero encher minhas turmas"];
+let estado=null, ocupado=false, falaAtiva=true, voltarAOuvir=false, gravacao=null, jobAtual=null;
+
+/* ---------- navegação ---------- */
+function ir(pg){location.hash=pg}
+function rota(){const pg=(location.hash.slice(1)||"criar");const ok=["criar","tutorial","praticas"].includes(pg)?pg:"criar";
+ document.querySelectorAll("section.pg").forEach(s=>s.classList.toggle("on",s.id==="pg-"+ok));
+ document.querySelectorAll(".menu a[data-pg]").forEach(a=>a.classList.toggle("on",a.dataset.pg===ok));
+ if(ok!=="tutorial")$("#tvid").pause();window.scrollTo(0,0)}
+addEventListener("hashchange",rota);rota();
+
+/* ---------- utilidades ---------- */
+async function api(u,o){const r=await fetch(u,o);const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||("Erro "+r.status));return j}
+function status(h){$("#status").innerHTML=h||""}
+function bolha(cls,html){const d=document.createElement("div");d.className="msg "+cls;d.innerHTML=html;$("#chat").appendChild(d);d.scrollIntoView({behavior:"smooth",block:"center"});return d}
+function falar(texto,fim){
+  if(!falaAtiva||!("speechSynthesis" in window)){fim&&fim();return}
+  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(texto);u.lang="pt-BR";
+  const v=speechSynthesis.getVoices().find(x=>/pt[-_]BR/i.test(x.lang));if(v)u.voice=v;u.rate=1.02;
+  let done=false;const f=()=>{if(!done){done=true;fim&&fim()}};u.onend=f;u.onerror=f;setTimeout(f,15000);speechSynthesis.speak(u)}
+
+/* ---------- caixa de texto ---------- */
+const txt=$("#txt");
+txt.addEventListener("input",()=>{txt.style.height="auto";txt.style.height=Math.min(txt.scrollHeight,150)+"px";$("#send").disabled=!txt.value.trim()||ocupado});
+txt.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();enviar()}});
+$("#send").onclick=()=>enviar();
+$("#exemplos").innerHTML=EXEMPLOS.map(e=>`<button class="ex">${esc(e)}</button>`).join("");
+document.querySelectorAll(".ex").forEach(b=>b.onclick=()=>{txt.value=b.textContent;txt.dispatchEvent(new Event("input"));txt.focus()});
+
+/* ---------- gravação por voz (para sozinho quando você para de falar) ---------- */
+function melhorMime(){return ["audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus","audio/mp4"].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||""}
+async function iniciarGravacao(){
+  if(gravacao||ocupado)return;
+  if(!navigator.mediaDevices||!window.MediaRecorder){status("Seu navegador não grava áudio. Digite o pedido na caixa.");return}
+  let stream;
+  const tentar=async c=>{try{return await navigator.mediaDevices.getUserMedia(c)}catch(e){return e}};
+  let r=await tentar({audio:{echoCancellation:true,noiseSuppression:true}});
+  if(r instanceof Error&&r.name!=="NotAllowedError"&&r.name!=="SecurityError"){
+    // o microfone padrão pode ser um fone Bluetooth ocupado: tenta sem filtros e depois cada entrada, a embutida primeiro
+    r=await tentar({audio:true});
+    if(r instanceof Error){
+      const ins=(await navigator.mediaDevices.enumerateDevices().catch(()=>[])).filter(d=>d.kind==="audioinput"&&d.deviceId&&d.deviceId!=="default"&&d.deviceId!=="communications");
+      ins.sort((a,b)=>(/bluetooth|tws|headset|fone/i.test(a.label)?1:0)-(/bluetooth|tws|headset|fone/i.test(b.label)?1:0));
+      for(const d of ins){r=await tentar({audio:{deviceId:{exact:d.deviceId}}});if(!(r instanceof Error))break}
+    }
+  }
+  if(r instanceof Error){const n=r.name;
+    status(n==="NotAllowedError"||n==="SecurityError"?"O microfone está bloqueado. Clique no cadeado ao lado do endereço, permita o microfone e tente de novo."
+      :n==="NotFoundError"?"Não encontrei nenhum microfone neste computador. Conecte um ou digite o pedido."
+      :n==="NotReadableError"?"O microfone está ocupado ou indisponível. Feche outros programas que o usam, ou troque o microfone padrão do sistema (se for fone Bluetooth, use o microfone do notebook). Enquanto isso, digite o pedido."
+      :`Não consegui abrir o microfone (${esc(n)}). Digite o pedido na caixa.`);return}
+  stream=r;
+  speechSynthesis&&speechSynthesis.cancel();
+  const mime=melhorMime(),mr=new MediaRecorder(stream,mime?{mimeType:mime}:{}),parts=[];
+  mr.ondataavailable=e=>e.data.size&&parts.push(e.data);
+  const ac=new (window.AudioContext||window.webkitAudioContext)();await ac.resume();
+  const an=ac.createAnalyser();an.fftSize=1024;ac.createMediaStreamSource(stream).connect(an);
+  const buf=new Uint8Array(an.fftSize);let ouviu=false,pico=0,piso=null,ultimo=performance.now(),t0=ultimo,raf;
+  const g={mr,parar:()=>{if(mr.state!=="inactive")mr.stop()}};gravacao=g;
+  mr.onstop=async()=>{cancelAnimationFrame(raf);stream.getTracks().forEach(t=>t.stop());ac.close();gravacao=null;
+    $("#mic").classList.remove("rec");const blob=new Blob(parts,{type:mr.mimeType||"audio/webm"});
+    if(blob.size<1500||performance.now()-t0<1200){status("A gravação ficou muito curta. Aperte o microfone e fale de novo.");return}
+    // mesmo sem detectar volume aqui, deixa o Whisper decidir (o medidor pode falhar em alguns navegadores)
+    await transcrever(blob)};
+  mr.start(250);$("#mic").classList.add("rec");
+  const barras=`<span class="bars">${"<i></i>".repeat(5)}</span>`;
+  const msg=()=>status(`${barras} Estou ouvindo… fale com calma. <small style="color:var(--mut)">(clique no microfone para terminar)</small>`);msg();
+  const ciclo=()=>{an.getByteTimeDomainData(buf);let s=0;for(const v of buf){const x=(v-128)/128;s+=x*x}const rms=Math.sqrt(s/buf.length),agora=performance.now();
+    if(agora-t0<500){piso=Math.max(piso??0,rms)} // calibra o ruído de fundo nos primeiros 0,5 s
+    const limiar=Math.max(0.01,(piso||0)*2.5);pico=Math.max(pico,rms);
+    if(rms>limiar){ouviu=true;ultimo=agora}
+    document.querySelectorAll(".bars i").forEach((b,i)=>b.style.height=(4+Math.min(14,rms*200*(0.5+((i*37)%5)/5)))+"px");
+    if((ouviu&&agora-ultimo>1800)||agora-t0>60000){g.parar();return}
+    if(!ouviu&&agora-t0>12000){g.parar();return}
+    raf=requestAnimationFrame(ciclo)};
+  ciclo();
+}
+$("#mic").onclick=()=>{ if(gravacao){gravacao.parar()} else {voltarAOuvir=true;iniciarGravacao()} };
+
+async function transcrever(blob){
+  ocupado=true;$("#mic").classList.add("busy");status('<span class="spin"></span> Transcrevendo o que você disse…');
+  try{const r=await fetch("/api/voz/transcrever",{method:"POST",headers:{"Content-Type":blob.type},body:blob});
+    const j=await r.json();if(!r.ok)throw new Error(j.error||"Falha na transcrição");
+    if(!j.texto){status("Não consegui entender o áudio. Tente de novo, um pouco mais perto do microfone.");return}
+    ocupado=false;await enviar(j.texto)}
+  catch(e){status("");bolha("a",`<div class="note err">${esc(e.message)}. Você pode digitar o pedido na caixa.</div>`)}
+  finally{ocupado=false;$("#mic").classList.remove("busy")}
+}
+
+/* ---------- conversa ---------- */
+async function enviar(texto){
+  texto=(texto??txt.value).trim();if(!texto||ocupado)return;
+  txt.value="";txt.dispatchEvent(new Event("input"));$("#out").innerHTML="";
+  bolha("u",`<span class="tag">Você</span>${esc(texto)}`);
+  ocupado=true;status('<span class="spin"></span> Entendendo seu pedido…');
+  try{
+    const r=await api("/api/pedido/interpretar",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({texto,estado})});
+    estado=r.estado;ocupado=false;
+    const chips=r.entendi.length?`<div class="entendi">${r.entendi.map(x=>`<span>${esc(x)}</span>`).join("")}</div>`:"";
+    if(!r.pronto){
+      bolha("a",`<span class="tag">Falta um detalhe</span><div class="q">${esc(r.pergunta)}</div>${chips}`);
+      status("");falar(r.pergunta,()=>{if(voltarAOuvir)iniciarGravacao();else txt.focus()});
+      if(!voltarAOuvir)txt.focus();
+    } else { bolha("a",`<span class="tag">Entendi</span>Vou criar seu Reel agora.${chips}`);await gerar(r.briefing) }
+  }catch(e){ocupado=false;status("");bolha("a",`<div class="note err">${esc(e.message)}</div>`)}
+}
+
+async function gerar(briefing){
+  ocupado=true;$("#send").disabled=true;const t0=Date.now();
+  const etapas=["Entendendo o negócio","Escolhendo o formato certo","Estudando Reels de referência","Escrevendo o roteiro","Gravando a voz","Montando as cenas e a trilha"];
+  const tick=()=>status(`<span class="spin"></span> ${etapas[Math.min(etapas.length-1,Math.floor((Date.now()-t0)/9000))]}… ${Math.round((Date.now()-t0)/1000)}s`);
+  tick();const iv=setInterval(tick,1000);
+  try{
+    const {job_id}=await api("/api/pedido/gerar",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({briefing})});
+    let j;while(true){await new Promise(r=>setTimeout(r,2000));j=await api(`/api/criativos/jobs/${job_id}`);if(j.status!=="running")break}
+    if(j.status==="error")throw new Error(j.error);
+    clearInterval(iv);status("");resultado(j,briefing);falar("Seu Reel está pronto!")
+  }catch(e){clearInterval(iv);status("");bolha("a",`<div class="note err">Não consegui gerar: ${esc(e.message)}</div><div class="act"><button class="btn" onclick="gerar(estado.briefing)">Tentar de novo</button></div>`)}
+  ocupado=false;txt.dispatchEvent(new Event("input"));
+}
+
+function refsHtml(trace){
+  const r=((trace||[]).find(t=>t.no==="referencias")||{}).detalhes?.referencias||[];
+  if(!r.length)return"";
+  return `<h3 style="margin:22px 0 8px;font-size:1rem">Reels de referência usados</h3><div class="trace">${r.map(x=>`<div><b>@${esc(x.perfil)} · ${x.score_relativo}× · ${x.duracao_s}s</b>${x.gancho?`Gancho: “${esc(x.gancho)}”<br>`:""}<a target="_blank" rel="noopener" href="${esc(x.url)}">Ver no Instagram ↗</a></div>`).join("")}</div><p style="margin:8px 0 0"><a href="/base">Ver toda a base de referência →</a></p>`;
+}
+function resultado(j,b){
+  $("#out").innerHTML=`<div class="result"><div class="phone"><div class="scr"><video src="${j.video}" controls autoplay loop playsinline></video></div></div>
+   <div><h2>Seu Reel está pronto 🎉</h2><p style="color:var(--mut);margin:0">${esc(b.negocio||"")} · formato vertical 1080×1920, com voz e música.</p>
+   <div class="act"><a class="btn" href="${j.video}" download="reel-${esc(j.pedido_id)}.mp4">Baixar MP4</a><button class="btn sec" id="ajustar">Ajustar (falar o que mudar)</button><button class="btn sec" id="novo">Criar outro</button></div>
+   ${refsHtml(j.trace)}<details style="margin-top:18px"><summary style="cursor:pointer;color:var(--mut)">Por que ficou assim (raciocínio)</summary><div class="trace">${(j.trace||[]).map(t=>`<div><b>${esc(t.titulo)}</b>${esc(t.resumo)}</div>`).join("")}</div></details></div></div>`;
+  $("#out").scrollIntoView({behavior:"smooth"});
+  $("#ajustar").onclick=()=>{bolha("a",`<span class="tag">Ajustar</span><div class="q">O que você quer mudar? Por exemplo: “mais divertido” ou “troque o preço para R$ 15”.</div>`);voltarAOuvir=true;falar("O que você quer mudar?",()=>iniciarGravacao())};
+  $("#novo").onclick=()=>{estado=null;$("#chat").innerHTML="";$("#out").innerHTML="";window.scrollTo({top:0,behavior:"smooth"});txt.focus()};
+}
+if(!navigator.mediaDevices||!window.MediaRecorder)$("#mic").title="Seu navegador não grava áudio: digite o pedido";
+speechSynthesis&&speechSynthesis.getVoices();
+</script>
+</body>
+</html>

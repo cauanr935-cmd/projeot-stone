@@ -324,9 +324,45 @@ class ReelRequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _servir_arquivo(self, path: Path, ctype: str, nome: str) -> None:
+        size = path.stat().st_size
+        start, end, status = 0, size - 1, 200
+        m = re.fullmatch(r"bytes=(\d*)-(\d*)", (self.headers.get("Range") or "").strip())
+        if m and any(m.groups()):
+            a, b = m.groups()
+            start = int(a) if a else max(0, size - int(b))
+            end = min(int(b), size - 1) if a and b else size - 1
+            status = 206
+        self.send_response(status)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Disposition", f'inline; filename="{nome}"')
+        self.send_header("Content-Length", str(end - start + 1))
+        self.send_header("Accept-Ranges", "bytes")
+        if status == 206:
+            self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
+        self.end_headers()
+        with path.open("rb") as f:
+            f.seek(start)
+            self.wfile.write(f.read(end - start + 1))
+
     def do_GET(self) -> None:
-        if self.path == "/":
-            body = (WEB_DIR / "index.html").read_bytes()
+        from src.criativos import api as criativos_api
+        if self.path.startswith(("/api/criativos", "/api/pedidos")) and criativos_api.tratar_get(self):
+            return
+        if self.path.startswith("/api/base"):
+            from src.criativos import base_api
+            if base_api.tratar_get(self):
+                return
+        if self.path in {"/tutorial.mp4", "/tutorial.jpg", "/logo.png"}:
+            arq = WEB_DIR / self.path.lstrip("/")
+            if arq.is_file():
+                self._servir_arquivo(arq, {".mp4": "video/mp4", ".png": "image/png"}.get(arq.suffix, "image/jpeg"), arq.name)
+            else:
+                self._json(404, {"error": "Tutorial ainda não gerado (python -m src.criativos.tutorial)."})
+            return
+        if self.path in {"/", "/galeria", "/editor", "/base"}:
+            body = (WEB_DIR / {"/": "estudio.html", "/galeria": "criativos.html", "/editor": "index.html",
+                               "/base": "base.html"}[self.path]).read_bytes()
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
@@ -420,6 +456,9 @@ class ReelRequestHandler(BaseHTTPRequestHandler):
         self._json(404, {"error": "Endpoint não encontrado."})
 
     def do_POST(self) -> None:
+        from src.criativos import api as criativos_api
+        if self.path.startswith(("/api/criativos", "/api/pedido", "/api/voz")) and criativos_api.tratar_post(self):
+            return
         if self.path.startswith("/api/uploads?"):
             self._receive_upload()
             return
