@@ -1,0 +1,6 @@
+# Só o front estático vai para a Vercel; o backend Python (ffmpeg, modelos) roda fora.
+/*
+!/src
+/src/*
+!/src/web
+!/vercel.json
