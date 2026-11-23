@@ -1,12 +1,12 @@
 {
   "mcpServers": {
     "impulso-stone-reels": {
-      "command": "/home/inteli/Documentos/ProjetoStone/impulso-stone-reels-mcp-spec/impulso-stone-reels-mcp/.venv/bin/python",
+      "command": "/home/inteli/Documentos/ProjetoStone/.venv/bin/python",
       "args": ["-m", "src.mcp_server"],
-      "cwd": "/home/inteli/Documentos/ProjetoStone/impulso-stone-reels-mcp-spec/impulso-stone-reels-mcp",
+      "cwd": "/home/inteli/Documentos/ProjetoStone",
       "env": {
-        "PYTHONPATH": "/home/inteli/Documentos/ProjetoStone/impulso-stone-reels-mcp-spec/impulso-stone-reels-mcp",
-        "REELS_WORKSPACE": "/home/inteli/Documentos/ProjetoStone/impulso-stone-reels-mcp-spec/impulso-stone-reels-mcp/workspace"
+        "PYTHONPATH": "/home/inteli/Documentos/ProjetoStone",
+        "REELS_WORKSPACE": "/home/inteli/Documentos/ProjetoStone/workspace"
       }
     }
   }

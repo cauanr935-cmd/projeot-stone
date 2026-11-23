@@ -45,91 +45,170 @@
     .viral { margin-top: 14px; color: #3c4a43; font-size: .92rem; line-height: 1.5; }
     .preview { margin: 20px 0; }
     .preview video { display: block; width: min(100%, 360px); max-height: 68vh; margin: 10px auto 0; background: #101612; border-radius: 12px; }
+
+    .wizard-head { display: flex; gap: 8px; margin: 26px 0 0; padding: 0; list-style: none; }
+    .wizard-head li { flex: 1; text-align: center; font-size: .85rem; color: #8a968f; padding-bottom: 10px; border-bottom: 4px solid #dfe7e1; font-weight: 600; }
+    .wizard-head li b { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #dfe7e1; color: #53615a; margin-right: 6px; font-size: .8rem; }
+    .wizard-head li.active { color: #17211d; border-color: #147843; }
+    .wizard-head li.active b, .wizard-head li.done b { background: #147843; color: white; }
+    .wizard-head li.done { border-color: #72df9b; color: #147843; }
+    .wizard-head li.done b { font-size: 0; } .wizard-head li.done b::before { content: "✓"; font-size: .8rem; }
+    .step { display: none; animation: fade .25s ease; } .step.active { display: block; }
+    .step h2 { margin: 0 0 4px; font-size: 1.35rem; }
+    .step > .help { margin: 0 0 18px; }
+    @keyframes fade { from { opacity: 0; transform: translateY(6px); } }
+    .dropzone { border: 2px dashed #9fb8a8; border-radius: 14px; padding: 34px 20px; text-align: center; background: #f7fbf8; cursor: pointer; transition: .15s; }
+    .dropzone:hover, .dropzone.over { border-color: #147843; background: #eaf8ef; transform: scale(1.01); }
+    .dropzone .icon { font-size: 2.6rem; line-height: 1; }
+    .dropzone strong { display: block; margin: 8px 0 4px; font-size: 1.1rem; }
+    .dropzone span { color: #53615a; font-size: .92rem; }
+    .linkbtn { background: none; color: #147843; padding: 6px 2px; text-decoration: underline; font-weight: 650; }
+    .linkbtn:hover { background: none; color: #0b6035; }
+    .files { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 8px; }
+    .files li { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid #e1e8e3; border-radius: 10px; background: #fcfdfc; }
+    .files li .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .files li .size { color: #66746b; font-size: .85rem; font-variant-numeric: tabular-nums; }
+    .files li button { padding: 2px 9px; background: #eef2ef; color: #8e1d18; border-radius: 6px; }
+    .files li button:hover { background: #fde4e1; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+    .card { text-align: left; background: white; color: #17211d; border: 2px solid #dfe7e1; border-radius: 12px; padding: 14px; font-weight: 500; }
+    .card:hover { background: #f7fbf8; border-color: #9fb8a8; }
+    .card.selected { border-color: #147843; background: #eaf8ef; box-shadow: 0 0 0 3px #14784322; }
+    .card b { display: block; margin-bottom: 4px; } .card small { margin: 0; }
+    .card .tag { display: inline-block; margin-top: 8px; padding: 2px 8px; border-radius: 99px; background: #e3ebe5; font-size: .78rem; color: #3c4a43; }
+    .toggle { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border: 2px solid #dfe7e1; border-radius: 12px; margin: 0 0 10px; cursor: pointer; font-weight: 500; }
+    .toggle:has(input:checked) { border-color: #147843; background: #eaf8ef; }
+    .toggle input { width: auto; margin: 3px 0 0; accent-color: #16834b; }
+    .toggle b { display: block; } .toggle small { margin-top: 2px; }
+    .nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 26px; }
+    .nav button.secondary { background: #eef2ef; color: #17211d; } .nav button.secondary:hover { background: #dfe7e1; }
+    .nav .spacer { flex: 1; }
+    .nav .submit { width: auto; margin: 0; flex: 1; max-width: 260px; }
+    .summary { padding: 14px; background: #f4f6f4; border-radius: 10px; font-size: .92rem; line-height: 1.6; margin-top: 16px; }
+    .err { color: #8e1d18; background: #fff0ee; border-radius: 9px; padding: 10px 12px; margin-top: 14px; }
     @keyframes pulse { 50% { opacity: .3; } }
     .hidden { display: none; }
     footer { color: #67746c; font-size: .88rem; margin-top: 18px; }
-    @media (max-width: 600px) { main { margin-top: 28px; } form, .result { padding: 20px; } .row { grid-template-columns: 1fr; gap: 0; } }
+    @media (max-width: 600px) { .wizard-head li span { display: none; } main { margin-top: 28px; } form, .result { padding: 20px; } .row { grid-template-columns: 1fr; gap: 0; } }
   </style>
 </head>
 <body>
   <header><strong>IMPULSO STONE</strong> <span> / REELS</span></header>
   <main>
     <h1>Monte seu Reel</h1>
-    <p class="intro">Escolha vídeos ou uma pasta do computador, selecione um formato e gere uma primeira versão para revisar.</p>
-    <form id="reel-form">
-      <label for="video-files">Escolha vídeos do computador</label>
-      <input id="video-files" name="video_files" type="file" accept=".mp4,.mov,.m4v,.webm,.mkv,video/*" multiple>
-      <small>Selecione vários arquivos de vídeo. Não há limite fixo de quantidade; cada vídeo pode ter até 500 MB.</small>
-      <label for="video-folder">Ou escolha uma pasta</label>
-      <input id="video-folder" name="video_folder" type="file" accept=".mp4,.mov,.m4v,.webm,.mkv,video/*" webkitdirectory directory multiple>
-      <small>O navegador pedirá acesso à pasta escolhida. Os vídeos encontrados nela e nas subpastas serão enviados para edição; outros tipos de arquivo serão ignorados. Cada vídeo pode ter até 500 MB.</small>
-      <div id="file-list" class="help" aria-live="polite"></div>
-
-      <details>
-        <summary>Ou use links diretos de vídeo</summary>
-        <label for="video-urls">Links dos vídeos</label>
-        <textarea id="video-urls" name="video_urls" placeholder="https://seu-site.com/video1.mp4&#10;https://seu-site.com/video2.mp4"></textarea>
-        <small>Um link público direto por linha. Links de páginas do YouTube, Drive, Instagram e TikTok não são aceitos.</small>
-      </details>
-
-      <label for="format">Formato do Reel</label>
-      <select id="format" name="format_id" required></select>
-      <small id="format-help"></small>
-
-      <div class="row">
-        <div>
-          <label for="business-name">Nome do negócio</label>
-          <input id="business-name" name="business_name" maxlength="100" placeholder="Ex.: Doces da Ana">
+    <p class="intro">Siga os 4 passos: envie os vídeos, escolha o formato, conte sobre o negócio e gere uma primeira versão para revisar.</p>
+    <ol class="wizard-head" id="wizard-head">
+      <li><b>1</b><span>Vídeos</span></li>
+      <li><b>2</b><span>Formato</span></li>
+      <li><b>3</b><span>Seu negócio</span></li>
+      <li><b>4</b><span>Áudio e revisão</span></li>
+    </ol>
+    <form id="reel-form" novalidate>
+      <section class="step active" data-step="0">
+        <h2>Envie seus vídeos</h2>
+        <p class="help">Arraste os vídeos (ou uma pasta inteira) para a área abaixo.</p>
+        <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Arraste vídeos aqui ou clique para escolher">
+          <div class="icon">🎬</div>
+          <strong>Solte seus vídeos aqui</strong>
+          <span>ou clique para escolher · MP4, MOV, M4V, WebM, MKV · até 500 MB cada</span>
         </div>
-        <div>
-          <label for="product">Produto ou serviço</label>
-          <input id="product" name="product" maxlength="120" placeholder="Ex.: bolo de cenoura">
+        <input id="video-files" name="video_files" type="file" accept=".mp4,.mov,.m4v,.webm,.mkv,video/*" multiple hidden>
+        <input id="video-folder" name="video_folder" type="file" webkitdirectory directory multiple hidden>
+        <button type="button" id="pick-folder" class="linkbtn">📁 Escolher uma pasta inteira</button>
+        <ul id="file-list" class="files" aria-live="polite"></ul>
+        <details>
+          <summary>Ou use links diretos de vídeo</summary>
+          <label for="video-urls">Links dos vídeos</label>
+          <textarea id="video-urls" name="video_urls" placeholder="https://seu-site.com/video1.mp4&#10;https://seu-site.com/video2.mp4"></textarea>
+          <small>Um link público direto por linha. Links de páginas do YouTube, Drive, Instagram e TikTok não são aceitos.</small>
+        </details>
+      </section>
+
+      <section class="step" data-step="1">
+        <h2>Escolha o formato</h2>
+        <p class="help">Cada formato tem um estilo e uma duração. Você poderá revisar o resultado antes de usar.</p>
+        <div id="format-cards" class="cards"></div>
+        <select id="format" name="format_id" hidden></select>
+        <small id="format-help" hidden></small>
+      </section>
+
+      <section class="step" data-step="2">
+        <h2>Conte sobre o seu negócio</h2>
+        <p class="help">Quanto mais claro o contexto, melhor a locução e a legenda.</p>
+        <div class="row">
+          <div>
+            <label for="business-name">Nome do negócio</label>
+            <input id="business-name" name="business_name" maxlength="100" placeholder="Ex.: Doces da Ana">
+          </div>
+          <div>
+            <label for="product">Produto ou serviço</label>
+            <input id="product" name="product" maxlength="120" placeholder="Ex.: bolo de cenoura">
+          </div>
         </div>
+        <div class="row">
+          <div>
+            <label for="cnae">CNAE (opcional)</label>
+            <input id="cnae" name="cnae_code" maxlength="20" placeholder="Ex.: 5620-1/04">
+          </div>
+          <div>
+            <label for="cta">Canal de contato</label>
+            <input id="cta" name="cta_channel" maxlength="60" value="WhatsApp">
+          </div>
+        </div>
+        <label for="context">Contexto e mensagem principal</label>
+        <textarea id="context" name="context" maxlength="3000" placeholder="O que aparece nos vídeos? O que você quer que o público entenda ou sinta? Ex.: peças de crochê feitas à mão, mostrar os detalhes e convidar para encomendas."></textarea>
+        <small>Descreva os fatos e a intenção do Reel. O sistema não identifica com confiabilidade o conteúdo visual por conta própria. Sem roteiro, este texto vira a locução.</small>
+        <details>
+          <summary>Quero escrever o roteiro da fala (opcional)</summary>
+          <label for="custom-script">Roteiro da fala</label>
+          <textarea id="custom-script" name="custom_script" maxlength="6000" placeholder="Escreva exatamente o que quer que seja falado."></textarea>
+          <small>Se preencher, substitui a locução gerada a partir do contexto.</small>
+        </details>
+      </section>
+
+      <section class="step" data-step="3">
+        <h2>Áudio e revisão</h2>
+        <p class="help">Escolha o que ouvir no Reel. Ative pelo menos uma opção.</p>
+        <label class="toggle"><input id="speech-enabled" name="speech_enabled" type="checkbox" checked>
+          <span><b>🗣️ Locução e legendas</b><small>Fala narrando o contexto/roteiro, com legendas na tela.</small></span></label>
+        <label class="toggle"><input id="music-enabled" name="music_enabled" type="checkbox" checked>
+          <span><b>🎵 Música de fundo</b><small>Trilha automática ou a sua; os cortes seguem as batidas.</small></span></label>
+        <div id="music-upload">
+          <label for="music-file">Sua trilha sonora (opcional)</label>
+          <input id="music-file" name="music_file" type="file" accept=".mp3,.wav,.m4a,.aac,.ogg,.flac,audio/*">
+          <small>MP3, WAV, M4A, AAC, OGG ou FLAC, até 100 MB e 15 min. Use apenas música cuja licença permita o uso.</small>
+        </div>
+        <label class="toggle" style="margin-top:14px"><input id="source-audio" name="keep_source_audio" type="checkbox">
+          <span><b>🔊 Manter o som original dos vídeos</b><small>Mistura o áudio captado em volume reduzido.</small></span></label>
+        <small id="audio-help">Ative pelo menos uma opção de áudio.</small>
+        <label class="toggle"><input id="commercial" name="commercial" type="checkbox" checked>
+          <span><b>Uso comercial</b><small>Aplica as verificações de licença; vozes e provedores sujeitos a revisão podem exigir aprovação antes de publicar.</small></span></label>
+        <div id="summary" class="summary"></div>
+      </section>
+
+      <div id="step-error" class="err hidden" role="alert"></div>
+      <div class="nav">
+        <button type="button" id="prev" class="secondary">← Voltar</button>
+        <span class="spacer"></span>
+        <button type="button" id="next">Continuar →</button>
+        <button id="submit" class="submit hidden" type="submit">🚀 Gerar Reel</button>
       </div>
-      <div class="row">
-        <div>
-          <label for="cnae">CNAE (opcional)</label>
-          <input id="cnae" name="cnae_code" maxlength="20" placeholder="Ex.: 5620-1/04">
-        </div>
-        <div>
-          <label for="cta">Canal de contato</label>
-          <input id="cta" name="cta_channel" maxlength="60" value="WhatsApp">
-        </div>
-      </div>
-
-      <label for="context">Contexto e mensagem principal</label>
-      <textarea id="context" name="context" maxlength="3000" placeholder="O que aparece nos vídeos? O que você quer que o público entenda ou sinta? Ex.: peças de crochê feitas à mão, mostrar os detalhes e convidar para encomendas."></textarea>
-      <small>Descreva os fatos e a intenção do Reel. O sistema não identifica com confiabilidade o conteúdo visual por conta própria. Se não escrever um roteiro abaixo, este texto será usado como locução quando a fala estiver ativada.</small>
-
-      <label for="custom-script">Roteiro da fala (opcional)</label>
-      <textarea id="custom-script" name="custom_script" maxlength="6000" placeholder="Escreva exatamente o que quer que seja falado. Se deixar vazio, será usado o texto do contexto; sem contexto, o sistema cria um roteiro-base."></textarea>
-      <small>Se preencher, este roteiro substitui o texto de locução gerado a partir do contexto.</small>
-
-      <label>Áudio do Reel</label>
-      <label class="check">
-        <input id="speech-enabled" name="speech_enabled" type="checkbox" checked>
-        <span>Adicionar fala/locução e legendas</span>
-      </label>
-      <label class="check">
-        <input id="music-enabled" name="music_enabled" type="checkbox" checked>
-        <span>Adicionar música de fundo (trilha enviada ou música automática)</span>
-      </label>
-      <label for="music-file">Sua trilha sonora (opcional)</label>
-      <input id="music-file" name="music_file" type="file" accept=".mp3,.wav,.m4a,.aac,.ogg,.flac,audio/*">
-      <small>Envie MP3, WAV, M4A, AAC, OGG ou FLAC de até 100 MB (máximo de 15 minutos). Com música ativada, o editor escolhe o trecho de maior energia e sincroniza os cortes às batidas detectadas. Sem arquivo, usa a trilha automática. Use apenas música cuja licença permita seu uso.</small>
-      <label class="check">
-        <input id="source-audio" name="keep_source_audio" type="checkbox">
-        <span>Manter o som original dos vídeos</span>
-      </label>
-      <small id="audio-help">Ative pelo menos uma opção de áudio. Se desligar fala e música, escolha manter o som original para haver áudio no arquivo final.</small>
-
-      <label class="check">
-        <input id="commercial" name="commercial" type="checkbox" checked>
-        <span>O Reel será usado comercialmente. O sistema aplicará as verificações de licença; provedores e vozes sujeitos a revisão podem exigir aprovação antes da publicação.</span>
-      </label>
-      <button id="submit" class="submit" type="submit">Gerar Reel</button>
-      <footer>Não há limite fixo de quantidade de vídeos. O envio e a renderização dependem do espaço livre em disco e dos recursos do computador. Arquivos selecionados são enviados ao servidor local para processamento.</footer>
+      <footer>O envio e a renderização dependem do espaço livre em disco e dos recursos do computador. Os arquivos são enviados apenas ao servidor local.</footer>
     </form>
+
+    <section id="analyze" class="result" aria-live="polite">
+      <h2>Analisar um vídeo que já existe</h2>
+      <p>Envie um Reel que você ou outra pessoa produziu e veja a aderência dele ao padrão dos Reels de alto desempenho.</p>
+      <input type="file" id="an-file" accept=".mp4,.mov,.m4v,.webm,.mkv,video/*">
+      <select id="an-formato">
+        <option value="">Comparar com todos os formatos</option>
+        <option value="bab">BAB</option><option value="product_demo_pas">Product Demo + PAS</option>
+        <option value="ugc_testimonial">UGC Testimonial</option><option value="pas">PAS</option><option value="aida">AIDA</option>
+      </select>
+      <button type="button" id="an-btn">Analisar potencial viral</button>
+      <p id="an-status" class="status"></p>
+      <div id="an-result" class="viral hidden"></div>
+    </section>
 
     <section id="result" class="result hidden" aria-live="polite">
       <h2>Processamento</h2>
@@ -139,6 +218,7 @@
       <ol id="steps" class="steps"></ol>
       <div id="log" class="log" aria-label="Histórico do processamento"></div>
       <p id="viral" class="viral hidden"></p>
+      <div id="potencial" class="viral hidden"></div>
       <div id="preview" class="preview hidden">
         <h3>Prévia do seu Reel</h3>
         <video id="reel-preview" controls playsinline preload="metadata">
@@ -175,6 +255,7 @@
     const stepsList = document.querySelector("#steps");
     const logBox = document.querySelector("#log");
     const viralBox = document.querySelector("#viral");
+    const potencialBox = document.querySelector("#potencial");
     let formats = [];
     let stages = [];
     let clientLog = [];
@@ -227,21 +308,88 @@
       });
     }
 
-    function selectedVideoFiles() {
-      const source = fileInput.files.length ? fileInput.files : folderInput.files;
-      return [...source].filter(file => [".mp4", ".mov", ".m4v", ".webm", ".mkv"]
-        .includes(file.name.slice(file.name.lastIndexOf(".")).toLowerCase()));
+    function renderPotencial(box, pv) {
+      box.replaceChildren();
+      const t = document.createElement("strong");
+      t.textContent = `Potencial viral: ${pv.nota}/100 (${pv.faixa}) — melhor que ${pv.percentil_vs_top10}% dos ${pv.n_referencia} Reels de alto desempenho`;
+      box.append(t);
+      if (pv.melhorias?.length) {
+        const ul = document.createElement("ul");
+        pv.melhorias.forEach(m => { const li = document.createElement("li"); li.textContent = m; ul.append(li); });
+        box.append(ul);
+      }
+      const av = document.createElement("small");
+      av.textContent = pv.aviso;
+      box.append(av);
+      box.classList.remove("hidden");
     }
+    document.querySelector("#an-btn").addEventListener("click", async () => {
+      const file = document.querySelector("#an-file").files[0];
+      const st = document.querySelector("#an-status"), out = document.querySelector("#an-result");
+      out.classList.add("hidden");
+      if (!file) { st.textContent = "Selecione um vídeo."; return; }
+      try {
+        st.textContent = "Enviando…";
+        const up = await uploadFile(file, (l, t) => { st.textContent = `Enviando… ${Math.round(100 * l / t)}%`; });
+        st.textContent = "Analisando (pode levar até 1 minuto)…";
+        const r = await fetch("/api/analyze", {method: "POST", headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({upload_id: up.upload_id, formato: document.querySelector("#an-formato").value})});
+        const body = await r.json();
+        if (!r.ok) throw new Error(body.error || "Falha na análise.");
+        renderPotencial(out, body);
+        st.textContent = "Análise concluída.";
+      } catch (e) { st.textContent = e.message; }
+    });
+
+    const VIDEO_EXT = [".mp4", ".mov", ".m4v", ".webm", ".mkv"];
+    const isVideo = file => VIDEO_EXT.includes(file.name.slice(file.name.lastIndexOf(".")).toLowerCase());
+    let chosen = [];        // todos os arquivos recebidos
+    function selectedVideoFiles() { return chosen.filter(isVideo); }
+
+    function addFiles(list) {
+      const keys = new Set(chosen.map(f => `${f.name}|${f.size}|${f.lastModified}`));
+      for (const f of list) {
+        const key = `${f.name}|${f.size}|${f.lastModified}`;
+        if (!keys.has(key)) { chosen.push(f); keys.add(key); }
+      }
+      updateFiles();
+    }
+
+    // lê arquivos e pastas soltos (inclui subpastas)
+    async function readEntry(entry, out) {
+      if (entry.isFile) {
+        await new Promise(res => entry.file(f => { out.push(f); res(); }, res));
+      } else if (entry.isDirectory) {
+        const reader = entry.createReader();
+        while (true) {
+          const batch = await new Promise(res => reader.readEntries(res, () => res([])));
+          if (!batch.length) break;
+          for (const child of batch) await readEntry(child, out);
+        }
+      }
+    }
+
+    function fmtSize(bytes) { return bytes >= 1048576 ? `${(bytes / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`; }
 
     function updateFiles() {
       const files = selectedVideoFiles();
-      const source = fileInput.files.length ? fileInput : folderInput;
-      const skipped = source.files.length - files.length;
-      fileList.textContent = files.length
-        ? `${files.length} vídeo(s) encontrado(s): ${files.map(file => file.webkitRelativePath || file.name).join(", ")}${skipped ? ` · ${skipped} arquivo(s) não compatível(eis) serão ignorados.` : ""}`
-        : (source.files.length ? "Nenhum vídeo compatível encontrado na seleção." : "");
-      fileInput.required = false;
-      folderInput.required = false;
+      const skipped = chosen.length - files.length;
+      fileList.innerHTML = "";
+      files.forEach(file => {
+        const li = document.createElement("li");
+        const big = file.size > 500 * 1024 * 1024;
+        li.innerHTML = '<span>🎞️</span><span class="name"></span><span class="size"></span><button type="button" title="Remover" aria-label="Remover">✕</button>';
+        li.querySelector(".name").textContent = file.webkitRelativePath || file.name;
+        li.querySelector(".size").textContent = big ? `${fmtSize(file.size)} · excede 500 MB` : fmtSize(file.size);
+        if (big) li.style.borderColor = "#d9534f";
+        li.querySelector("button").onclick = () => { chosen = chosen.filter(f => f !== file); updateFiles(); };
+        fileList.append(li);
+      });
+      if (skipped > 0) {
+        const li = document.createElement("li");
+        li.textContent = `${skipped} arquivo(s) que não são vídeo compatível serão ignorados.`;
+        fileList.append(li);
+      }
       urlInput.required = files.length === 0;
     }
 
@@ -263,6 +411,10 @@
       if (current) help.textContent = `${current.focus} · ${current.duration.min}–${current.duration.max} segundos.`;
     }
 
+    function markCard() {
+      document.querySelectorAll(".card").forEach(c => c.classList.toggle("selected", c.dataset.id === select.value));
+    }
+
     async function loadFormats() {
       const response = await fetch("/api/formats");
       if (!response.ok) throw new Error("Não foi possível carregar os formatos.");
@@ -274,6 +426,18 @@
         select.append(option);
       }
       select.value = "2";
+      const cards = document.querySelector("#format-cards");
+      for (const item of formats) {
+        const card = document.createElement("button");
+        card.type = "button"; card.className = "card"; card.dataset.id = item.id;
+        card.innerHTML = '<b></b><small></small><span class="tag"></span>';
+        card.querySelector("b").textContent = `${item.id}. ${item.name}`;
+        card.querySelector("small").textContent = item.focus;
+        card.querySelector(".tag").textContent = `${item.duration.min}–${item.duration.max} s`;
+        card.onclick = () => { select.value = item.id; markCard(); updateFormatHelp(); };
+        cards.append(card);
+      }
+      markCard();
       updateFormatHelp();
       stages = await (await fetch("/api/stages")).json();
     }
@@ -300,6 +464,22 @@
               `${v.words_per_second} palavras/s na legenda, grade de batidas: ${v.beat_grid}.`;
             viralBox.classList.remove("hidden");
           }
+          const pv = job.potencial_viral;
+          if (pv && pv.nota != null) {
+            potencialBox.replaceChildren();
+            const t = document.createElement("strong");
+            t.textContent = `Potencial viral: ${pv.nota}/100 (${pv.faixa}) — melhor que ${pv.percentil_vs_top10}% dos ${pv.n_referencia} Reels de alto desempenho`;
+            potencialBox.append(t);
+            if (pv.melhorias?.length) {
+              const ul = document.createElement("ul");
+              pv.melhorias.forEach(m => { const li = document.createElement("li"); li.textContent = m; ul.append(li); });
+              potencialBox.append(ul);
+            }
+            const av = document.createElement("small");
+            av.textContent = pv.aviso;
+            potencialBox.append(av);
+            potencialBox.classList.remove("hidden");
+          }
           showStatus(`Reel pronto.${job.audit?.passed ? " Auditoria técnica aprovada." : ""}`, "success");
           return;
         }
@@ -308,19 +488,27 @@
     }
 
     select.addEventListener("change", updateFormatHelp);
-    fileInput.addEventListener("change", () => {
-      if (fileInput.files.length) folderInput.value = "";
-      updateFiles();
+    const dropzone = document.querySelector("#dropzone");
+    dropzone.addEventListener("click", () => fileInput.click());
+    dropzone.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); } });
+    document.querySelector("#pick-folder").addEventListener("click", () => folderInput.click());
+    fileInput.addEventListener("change", () => { addFiles(fileInput.files); fileInput.value = ""; });
+    folderInput.addEventListener("change", () => { addFiles(folderInput.files); folderInput.value = ""; });
+    ["dragenter", "dragover"].forEach(t => dropzone.addEventListener(t, e => { e.preventDefault(); dropzone.classList.add("over"); }));
+    ["dragleave", "drop"].forEach(t => dropzone.addEventListener(t, e => { e.preventDefault(); dropzone.classList.remove("over"); }));
+    dropzone.addEventListener("drop", async e => {
+      const items = [...(e.dataTransfer.items || [])].map(i => i.webkitGetAsEntry && i.webkitGetAsEntry()).filter(Boolean);
+      if (items.length) { const out = []; for (const it of items) await readEntry(it, out); addFiles(out); }
+      else addFiles(e.dataTransfer.files);
     });
-    folderInput.addEventListener("change", () => {
-      if (folderInput.files.length) fileInput.value = "";
-      updateFiles();
-    });
+    window.addEventListener("dragover", e => e.preventDefault());
+    window.addEventListener("drop", e => e.preventDefault());
     [speechInput, musicInput, sourceAudioInput].forEach(input =>
       input.addEventListener("change", validateAudioChoices));
     urlInput.addEventListener("input", updateFiles);
     form.addEventListener("submit", async event => {
       event.preventDefault();
+      if (current < stepEls.length - 1) { nextBtn.click(); return; }
       button.disabled = true;
       download.classList.add("hidden");
       previewVideo.pause();
@@ -328,6 +516,7 @@
       previewVideo.load();
       previewBox.classList.add("hidden");
       viralBox.classList.add("hidden");
+      potencialBox.classList.add("hidden");
       highWater = 0;
       setProgress(0, 0);
       renderSteps("intake", false);
@@ -338,7 +527,7 @@
         }
         const files = selectedVideoFiles();
         const musicFile = musicInput.checked ? musicFileInput.files[0] : null;
-        const hasSelection = fileInput.files.length > 0 || folderInput.files.length > 0;
+        const hasSelection = chosen.length > 0;
         const urls = urlInput.value.trim();
         if (files.length && urls) throw new Error("Escolha arquivos do computador ou use links, não os dois juntos.");
         if (hasSelection && !files.length) throw new Error("A seleção não contém vídeos em formato compatível.");
@@ -405,6 +594,68 @@
         button.disabled = false;
       }
     });
+
+    // ---------- passo a passo ----------
+    const stepEls = [...document.querySelectorAll(".step")];
+    const headEls = [...document.querySelectorAll("#wizard-head li")];
+    const prevBtn = document.querySelector("#prev");
+    const nextBtn = document.querySelector("#next");
+    const stepError = document.querySelector("#step-error");
+    let current = 0;
+
+    function fillSummary() {
+      const f = formats.find(i => i.id === Number(select.value));
+      const n = selectedVideoFiles().length;
+      const urls = urlInput.value.trim().split(/\n+/).filter(Boolean).length;
+      document.querySelector("#summary").innerHTML = "";
+      const lines = [
+        `🎬 Vídeos: ${n ? n + " arquivo(s)" : urls + " link(s)"}`,
+        `📐 Formato: ${f ? f.name : "—"}`,
+        `🏪 Negócio: ${document.querySelector("#business-name").value || "—"} · ${document.querySelector("#product").value || "—"}`,
+      ];
+      lines.forEach(t => { const d = document.createElement("div"); d.textContent = t; document.querySelector("#summary").append(d); });
+    }
+
+    function validateStep(i) {
+      if (i === 0) {
+        const files = selectedVideoFiles(); const urls = urlInput.value.trim();
+        if (chosen.length && !files.length) return "A seleção não contém vídeos em formato compatível.";
+        if (files.length && urls) return "Use arquivos do computador ou links, não os dois juntos.";
+        if (!files.length && !urls) return "Adicione ao menos um vídeo (arraste, escolha uma pasta ou cole um link).";
+        const big = files.find(f => f.size > 500 * 1024 * 1024);
+        if (big) return `${big.name} excede o limite de 500 MB. Remova-o da lista.`;
+      }
+      if (i === 3 && !validateAudioChoices()) return "Escolha fala, música ou o som original dos vídeos.";
+      return "";
+    }
+
+    function goTo(i) {
+      current = Math.max(0, Math.min(stepEls.length - 1, i));
+      stepEls.forEach((el, k) => el.classList.toggle("active", k === current));
+      headEls.forEach((el, k) => { el.classList.toggle("active", k === current); el.classList.toggle("done", k < current); });
+      prevBtn.style.visibility = current === 0 ? "hidden" : "visible";
+      const last = current === stepEls.length - 1;
+      nextBtn.classList.toggle("hidden", last);
+      button.classList.toggle("hidden", !last);
+      stepError.classList.add("hidden");
+      if (last) fillSummary();
+      window.scrollTo({top: 0, behavior: "smooth"});
+    }
+
+    nextBtn.addEventListener("click", () => {
+      const msg = validateStep(current);
+      if (msg) { stepError.textContent = msg; stepError.classList.remove("hidden"); return; }
+      goTo(current + 1);
+    });
+    prevBtn.addEventListener("click", () => goTo(current - 1));
+    headEls.forEach((el, k) => el.addEventListener("click", () => { if (k < current) goTo(k); }));
+    // Enter nos campos avança em vez de enviar antes da hora
+    form.addEventListener("keydown", e => {
+      if (e.key === "Enter" && e.target.tagName === "INPUT" && current < stepEls.length - 1) { e.preventDefault(); nextBtn.click(); }
+    });
+    const music_sync = () => { document.querySelector("#music-upload").classList.toggle("hidden", !musicInput.checked); };
+    musicInput.addEventListener("change", music_sync); music_sync();
+    goTo(0);
 
     loadFormats().catch(error => showStatus(error.message, "error"));
   </script>

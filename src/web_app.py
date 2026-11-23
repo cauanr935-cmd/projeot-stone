@@ -358,6 +358,7 @@ class ReelRequestHandler(BaseHTTPRequestHandler):
                 if job.get("report"):
                     snapshot["audit"] = job["report"].get("audit")
                     snapshot["viral"] = job["report"].get("viral")
+                    snapshot["potencial_viral"] = job["report"].get("potencial_viral")
                 self._json(200, snapshot)
                 return
             output_path = Path(job.get("output", "")).resolve()
@@ -422,6 +423,9 @@ class ReelRequestHandler(BaseHTTPRequestHandler):
         if self.path.startswith("/api/uploads?"):
             self._receive_upload()
             return
+        if self.path == "/api/analyze":
+            self._analyze_external()
+            return
         if self.path != "/api/jobs":
             self._json(404, {"error": "Endpoint não encontrado."})
             return
@@ -465,6 +469,31 @@ class ReelRequestHandler(BaseHTTPRequestHandler):
         threading.Thread(target=_render_job,
                          args=(job_id, data, urls, upload_ids, music_upload_id), daemon=True).start()
         self._json(202, {"job_id": job_id, "status": "queued", "status_url": f"/api/jobs/{job_id}"})
+
+    def _analyze_external(self) -> None:
+        """Pontua o potencial viral de um vídeo enviado pelo usuário (não gerado por este app)."""
+        if self.client_address[0] not in {"127.0.0.1", "::1"}:
+            self._json(403, {"error": "A interface aceita conexões somente da própria máquina."})
+            return
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+            if not 0 < length <= MAX_REQUEST_BYTES:
+                raise ValueError("A solicitação está vazia ou excede o limite permitido.")
+            data = json.loads(self.rfile.read(length))
+            (upload_id,) = validate_upload_ids([data.get("upload_id")])
+            formato = data.get("formato") or None
+            if formato not in {None, "bab", "product_demo_pas", "ugc_testimonial", "pas", "aida"}:
+                raise ValueError("Formato de referência inválido.")
+            with UPLOADS_LOCK:
+                video = UPLOADS[upload_id]
+        except (ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
+            self._json(400, {"error": str(exc) or "Envie um vídeo primeiro."})
+            return
+        try:
+            from src.analise.score_viral import pontuar_video
+            self._json(200, pontuar_video(video, formato, com_fala=True))
+        except Exception as exc:
+            self._json(500, {"error": f"Não foi possível analisar o vídeo: {str(exc)[:200]}"})
 
     def _receive_upload(self) -> None:
         if self.client_address[0] not in {"127.0.0.1", "::1"}:

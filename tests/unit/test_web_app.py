@@ -210,3 +210,31 @@ def test_edit_plan_uses_user_context_and_audio_choices(tmp_path):
         "speech_enabled": False, "music_enabled": True, "keep_source_audio": False
     }
     assert plan["music"]["enabled"] is True
+
+
+def test_analyze_external_video_endpoint(tmp_path, monkeypatch):
+    import json
+    monkeypatch.setattr(web_app, "WORKSPACE", tmp_path)
+    src = ROOT_VIDEO = __import__("pathlib").Path("output/reel_format_1.mp4")
+    if not src.exists():
+        pytest.skip("sem vídeo de amostra")
+    with src.open("rb") as fh:
+        upload_id, _ = web_app.save_uploaded_video("x.mp4", fh, src.stat().st_size)
+    import src.analise.score_viral as sv
+    monkeypatch.setattr(sv, "extrair_features", lambda v, com_fala=True, modelo="small": {
+        "duration_sec": 40, "cuts_per_minute": 3, "words_per_minute": 170, "face_detected_ratio": 1.0})
+    server = ThreadingHTTPServer(("127.0.0.1", 0), web_app.ReelRequestHandler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        req = urllib.request.Request(f"http://127.0.0.1:{server.server_port}/api/analyze",
+                                     data=json.dumps({"upload_id": upload_id}).encode(),
+                                     headers={"Content-Type": "application/json"})
+        body = json.load(urllib.request.urlopen(req, timeout=60))
+        assert 0 <= body["nota"] <= 100 and body["faixa"] in {"alto", "médio", "baixo"}
+        bad = urllib.request.Request(f"http://127.0.0.1:{server.server_port}/api/analyze",
+                                     data=json.dumps({"upload_id": "0" * 32}).encode())
+        with pytest.raises(urllib.error.HTTPError) as e:
+            urllib.request.urlopen(bad, timeout=10)
+        assert e.value.code == 400
+    finally:
+        server.shutdown()

@@ -29,3 +29,4 @@ dados/
 *.png
 !docs/**/*.png
 !tests/fixtures/*.jpg
+_quarentena_para_apagar/

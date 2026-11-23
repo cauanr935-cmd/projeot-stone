@@ -381,6 +381,11 @@ def assemble_and_render_reel(edit_plan: dict, output_path: Path, commercial: boo
                         "music_source": "user_upload" if custom_music else "procedural",
                         "music_start_s": round(music_start, 2)},
               "audit": audit, "elapsed_s": round(time.monotonic() - started, 2)}
+    try:
+        from src.analise.score_viral import pontuar_video
+        report["potencial_viral"] = pontuar_video(output, com_fala=False)
+    except Exception as exc:  # indicador é auxiliar: nunca derruba o render
+        report["potencial_viral"] = {"nota": None, "erro": str(exc)[:200]}
     (job_dir / "render_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2),
                                                 encoding="utf-8")
     if not audit["passed"]:
