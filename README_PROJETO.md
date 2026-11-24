@@ -137,3 +137,8 @@ Reproduzir ou ampliar a base (exige `APIFY_TOKEN` no `.env`; a pasta `dados/` n�
 
 Limite conhecido: o crédito gratuito da Apify (US$ 5/mês) limita o volume; vídeos e miniaturas servem só para
 análise interna e não devem ser redistribuídos.
+
+## Tutorial com Claude e exemplos
+
+- [`docs/TUTORIAL_CLAUDE.md`](docs/TUTORIAL_CLAUDE.md): passo a passo com o Claude, o MCP e as skills instaladas.
+- [`exemplos/README.md`](exemplos/README.md): 18 exemplos com prompts prontos (fonte: `exemplos/catalogo.yaml`; valide com `python scripts/exemplos.py --check`).

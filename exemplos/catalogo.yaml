@@ -1,0 +1,273 @@
+# Base de exemplos: o que dá para fazer HOJE com o Claude + MCP do projeto + skills instaladas.
+# Fonte única. `python scripts/exemplos.py` valida (tools, skills, perfis, arquivos) e gera exemplos/README.md.
+#
+# status:
+#   local      = roda neste ambiente sem chave e sem rede (conferido pelo validador / comandos do tutorial)
+#   rede       = precisa baixar algo na 1ª vez (ex.: pacote npm) ou acessar a internet
+#   chave      = exige chave de API que NÃO está configurada (e envia mídia a terceiros)
+# nivel: 1 = comece aqui, 2 = intermediário, 3 = avançado
+
+versao: 1
+
+grupos:
+  mcp: "A. Servidor MCP do projeto (criativos e Reels prontos)"
+  edicao: "B. Edição de vídeo gravado (skills)"
+  motion: "C. Motion graphics sob medida (HyperFrames)"
+  plataforma: "D. Contexto da plataforma"
+  bloqueado: "E. Disponível, mas bloqueado por chave"
+
+exemplos:
+  # ------------------------------------------------------------------ A. MCP
+  - id: ex01-criativo-perfil
+    grupo: mcp
+    nivel: 1
+    status: local
+    titulo: Criativo pronto para um perfil (eletricista)
+    resultado: MP4 1080x1920 em motion graphics, sem precisar de mídia do cliente.
+    usa:
+      tools: [listar_perfis_criativos, gerar_criativo_perfil]
+    perfis: [eletricista]
+    prompt: |
+      Liste os perfis de criativo disponíveis e gere o criativo do perfil eletricista
+      com o nome de negócio "Eletro Seguro". Sem voz.
+    cli: python -m src.criativos.gerar --perfil eletricista --negocio "Eletro Seguro" --sem-voz
+    saida: output/criativos/eletricista_f4.mp4 (+ .spec.json)
+    observacao: Formato 4 (PAS). Textos dos perfis são ilustrativos; revise preço, prazo e garantia antes de publicar.
+
+  - id: ex02-pedido-livre
+    grupo: mcp
+    nivel: 1
+    status: local
+    titulo: Pedido em linguagem livre (confeitaria)
+    resultado: A IA entende o pedido, pergunta só o que faltar e gera o Reel.
+    usa:
+      tools: [interpretar_pedido, gerar_criativo_pedido]
+    prompt: |
+      Sou confeiteira, minha loja se chama Doce Sonho e quero divulgar bolo de pote
+      por R$ 12. Faça um Reel. Se faltar algum dado, me pergunte.
+    saida: output/pedidos/pedido_<id>.mp4 (+ .spec.json e .raciocinio.json)
+    observacao: O nome do negócio só é extraído por regras se vier como "se chama / chamada / nome é".
+
+  - id: ex03-pedido-por-audio
+    grupo: mcp
+    nivel: 2
+    status: local
+    titulo: Pedido falado (áudio do WhatsApp)
+    resultado: Transcrição local do áudio vira briefing e depois Reel.
+    usa:
+      tools: [transcrever_audio, interpretar_pedido, gerar_criativo_pedido]
+    prompt: |
+      O áudio workspace/uploads/pedido.ogg é a minha descrição do negócio. Transcreva,
+      interprete e gere o Reel.
+    entrada: um áudio de fala PT-BR dentro de workspace/ (faster-whisper local; o áudio não sai da máquina)
+    saida: output/pedidos/pedido_<id>.mp4
+
+  - id: ex04-claude-escreve-o-spec
+    grupo: mcp
+    nivel: 2
+    status: local
+    titulo: O próprio Claude escreve o roteiro (sem chave de API no projeto)
+    resultado: Roteiro criativo e original, com a marca do perfil, renderizado e auditado.
+    usa:
+      tools: [briefing_criativo, renderizar_criativo]
+      prompts: [criar_criativo_motion]
+    perfis: [cabeleireira]
+    prompt: |
+      Use o prompt criar_criativo_motion para o perfil cabeleireira. Leia o briefing,
+      escreva você mesmo o CriativoSpec (gancho de até 5 palavras, cores da marca) e
+      renderize com renderizar_criativo.
+    saida: output/criativos/ ou output/pedidos/ (o renderizar_criativo devolve o caminho)
+    observacao: É o caminho que usa a sua assinatura do Claude no lugar de ANTHROPIC_API_KEY.
+
+  - id: ex05-lote-10-perfis
+    grupo: mcp
+    nivel: 2
+    status: local
+    titulo: Galeria completa (10 perfis, 5 formatos)
+    resultado: Um criativo por perfil prioritário, para comparar os 5 formatos da pesquisa.
+    usa:
+      tools: [gerar_criativos_lote, list_formats]
+    prompt: |
+      Gere o lote dos criativos para os perfis cabeleireira, confeiteira, loja_roupas,
+      mecanico e professor_particular, sem voz, e me diga qual formato cada um usou.
+    cli: python -m src.criativos.gerar --perfil all --sem-voz
+    saida: output/criativos/<perfil>_f<N>.mp4
+
+  - id: ex06-reel-com-midia-do-cliente
+    grupo: mcp
+    nivel: 2
+    status: local
+    titulo: Reel a partir de vídeos e fotos do cliente
+    resultado: Plano de edição + render em um dos 5 formatos, auditado por ffprobe/loudness.
+    usa:
+      tools: [build_edit_plan, assemble_and_render_reel]
+      prompts: [reel_product_demo_pas]
+    entrada: tests/fixtures/mixed (vídeo + fotos de teste)
+    prompt: |
+      Com a pasta tests/fixtures/mixed, monte o plano de edição no formato 2
+      (Product Demo + PAS) para a loja "Doces da Ana", produto "bolo de cenoura",
+      mostre o plano e depois renderize.
+    cli: python -m src.main --input-dir tests/fixtures/mixed --format 2 --out output/meu_reel.mp4 --business-name "Doces da Ana" --product "bolo de cenoura"
+    saida: output/meu_reel.mp4
+    observacao: Sem voz local instalada vale o tier de teste (tom), que não é permitido em render comercial.
+
+  - id: ex07-reenquadrar-e-animar-foto
+    grupo: mcp
+    nivel: 2
+    status: local
+    titulo: Reenquadrar vídeo para 9:16 e animar uma foto (parallax 2.5D)
+    resultado: Dois ativos prontos para usar em qualquer edição.
+    usa:
+      tools: [auto_reframe_vertical_9_16, animate_static_image_2_5d]
+    entrada: tests/fixtures/sample_raw.mp4 e tests/fixtures/img_1.jpg (dentro de workspace/ ou copiados para lá)
+    prompt: |
+      Reenquadre o vídeo de exemplo para 9:16 com o preset talking_head e anime a
+      foto img_1.jpg por 5 segundos em parallax.
+    saida: arquivos escolhidos em output_path
+
+  - id: ex08-voz-e-legenda-karaoke
+    grupo: mcp
+    nivel: 3
+    status: local
+    titulo: Locução PT-BR e legenda estilo karaokê
+    resultado: Áudio de locução (+ SRT) e arquivo ASS com palavra destacada.
+    usa:
+      tools: [synthesize_voiceover_ptbr, generate_karaoke_ass_subs, get_router_status]
+    prompt: |
+      Veja o status do roteador, depois sintetize esta locução: "Seu bolo de pote
+      chega fresquinho, peça pelo WhatsApp". Gere também a legenda karaokê.
+    observacao: A cascata tenta Kokoro local e só depois serviços online. Confira get_router_status antes de assumir a voz.
+
+  # ------------------------------------------------------------------ B. Edição
+  - id: ex09-analisar-referencia
+    grupo: edicao
+    nivel: 1
+    status: local
+    titulo: Assistir e resumir um vídeo de referência
+    resultado: Frames com timestamp e transcrição; o Claude descreve estrutura, gancho e ritmo.
+    usa:
+      skills: [watch]
+    prompt: |
+      /watch output/criativos/eletricista_f4.mp4 — descreva o gancho, a estrutura e o CTA.
+    observacao: Engine local (frames + transcrição). Para URL o yt-dlp está em .venv/bin. Sem GEMINI_API_KEY o vídeo não é enviado a ninguém.
+
+  - id: ex10-checar-e-exportar
+    grupo: edicao
+    nivel: 1
+    status: local
+    titulo: Auditar e preparar o arquivo final para o Instagram
+    resultado: Relatório de resolução, codec, CFR e loudness; export para Reels.
+    usa:
+      skills: [ffmpeg-skill]
+    prompt: |
+      Use a ffmpeg-skill para checar output/criativos/eletricista_f4.mp4 (probe, check
+      e loudness) e me diga se serve para Reels 1080x1920, H.264, AAC, entre -24 e -10 LUFS.
+    cli: python tests/verify_final_reel.py --video output/criativos/eletricista_f4.mp4 --format 4
+    saida: relatório no terminal
+
+  - id: ex11-cortar-silencios-e-erros
+    grupo: edicao
+    nivel: 2
+    status: local
+    titulo: Limpar uma gravação de pessoa falando (silêncios, gagueira, repetições)
+    resultado: Lista de cortes aprovada por você e vídeo enxuto.
+    usa:
+      skills: [herk-cut-silences, herk-cut-mistakes, edicao-video-reels-pessoas]
+    entrada: gravação própria em workspace/ (a fala é a estrutura; nada é inventado)
+    prompt: |
+      Edite workspace/uploads/depoimento.mp4 para Reels: corte silêncios, depois proponha
+      os cortes de erros para eu aprovar. Transcreva com o whisper local, não com ElevenLabs.
+    observacao: As skills herk citam ElevenLabs para transcrever; peça explicitamente o whisper local (faster-whisper está instalado).
+
+  - id: ex12-punch-zoom
+    grupo: edicao
+    nivel: 2
+    status: local
+    titulo: Zooms de ênfase em clipe já cortado
+    resultado: Punch-zoom nas palavras fortes e push suave nas falas importantes.
+    usa:
+      skills: [add-zooms]
+    prompt: |
+      /add-zooms workspace/uploads/depoimento_cortado.mp4 — renderize e mostre o mapa de zooms.
+    observacao: Usa o whisper CLI (instalado) + ffmpeg zoompan. Funciona melhor em talking-head estático.
+
+  - id: ex13-efeitos-no-rosto
+    grupo: edicao
+    nivel: 3
+    status: rede
+    titulo: Efeitos que seguem o rosto (51 efeitos)
+    resultado: Efeitos tipo spotlight, widgets de vidro e pop-ups atrás da cabeça.
+    usa:
+      skills: [video-effects]
+    prompt: |
+      Use a skill video-effects para aplicar "spotlight" neste clipe.
+    observacao: Precisa do venv da skill (mediapipe não está instalado). Rode antes - bash .claude/skills/video-effects/scripts/setup.sh
+
+  # ------------------------------------------------------------------ C. Motion
+  - id: ex14-motion-hyperframes-padaria
+    grupo: motion
+    nivel: 2
+    status: rede
+    titulo: Motion graphics sob medida em HTML (exemplo da padaria)
+    resultado: Vídeo 1080x1920 editável (HTML + GSAP) com a identidade da marca.
+    usa:
+      skills: [hyperframes, hyperframes-cli, hyperframes-registry, media-use]
+    entrada: output/prototipos/padaria_hyperframes/index.html (projeto de referência já pronto)
+    prompt: |
+      Use a skill hyperframes. Abra o projeto output/prototipos/padaria_hyperframes como
+      referência e crie uma versão para a minha marca (cores, nome e oferta nas variáveis),
+      rode o check e mostre o preview antes de renderizar.
+    observacao: O CLI roda por npx e baixa o pacote hyperframes na 1ª vez (npm). Ele envia uma nota de uso e a skill avisa antes; diga não para pular.
+
+  - id: ex15-copiar-estilo-de-video
+    grupo: motion
+    nivel: 3
+    status: rede
+    titulo: Refazer um vídeo seu em HTML editável
+    resultado: Projeto HyperFrames que reproduz o vídeo original quadro a quadro.
+    usa:
+      skills: [reverse-any-video]
+    prompt: |
+      Use reverse-any-video em output/criativos/eletricista_f4.mp4 para reconstruir como
+      projeto editável.
+    observacao: Só com vídeos que você tem direito de usar.
+
+  - id: ex16-episodio-em-estilo
+    grupo: motion
+    nivel: 3
+    status: rede
+    titulo: Novo episódio num estilo pronto (explainer)
+    resultado: Vídeo explicativo no estilo escolhido sobre o seu tema.
+    usa:
+      skills: [style-sampling]
+    prompt: |
+      Use style-sampling para fazer um Finance Explainer de 45 segundos sobre "como separar
+      o dinheiro da empresa do dinheiro de casa" para MEI.
+    observacao: Nunca usa rosto, voz ou logo de terceiros.
+
+  # ------------------------------------------------------------------ D. Plataforma
+  - id: ex17-contexto-da-marca
+    grupo: plataforma
+    nivel: 1
+    status: local
+    titulo: Perguntar à plataforma sobre projetos e criativos
+    resultado: Claude lê (somente leitura) marca, projetos e criativos já gerados.
+    usa:
+      tools: [list_projects, list_creatives, get_brand_guidelines, search_context, get_item]
+    observacao: Tools do servidor impulso-plataforma (MCP HTTP em 127.0.0.1:8765, escopos aceitos no Conectar Claude).
+    prompt: |
+      Pelo impulso-plataforma, liste os meus projetos e criativos e me mostre as diretrizes
+      de marca do projeto da confeitaria.
+
+  # ------------------------------------------------------------------ E. Bloqueado
+  - id: ex18-elevenlabs
+    grupo: bloqueado
+    nivel: 3
+    status: chave
+    titulo: Voz, música, efeitos e isolamento de voz (ElevenLabs)
+    resultado: Qualidade de estúdio, mas a mídia vai para a ElevenLabs.
+    usa:
+      skills: [elevenlabs-text-to-speech, elevenlabs-music, elevenlabs-sound-effects, elevenlabs-speech-to-text, elevenlabs-voice-isolator]
+    prompt: |
+      (Não execute sem decisão sua.) Gere uma trilha instrumental de 20 segundos com a skill elevenlabs-music.
+    observacao: Exige ELEVENLABS_API_KEY (não configurada). Regra 7 do CLAUDE.md - mídia do cliente não vai para provedor que treina com entradas gratuitas. Use só com decisão consciente.

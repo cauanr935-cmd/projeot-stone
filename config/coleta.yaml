@@ -22,7 +22,24 @@ youtube:
   short_max_segundos: 180      # heurística: vídeo <= 180 s é Short
   limite_padrao: 150           # vídeos inspecionados por canal (mais recentes)
   baixar_apenas_shorts: true
-  formato_ytdlp: "best[height<=720][ext=mp4]/best[height<=720]/best"
+  formato_ytdlp: "bv*[height<=720][vcodec^=avc1]+ba[ext=m4a]/bv*[height<=720][ext=mp4]+ba/bv*[height<=720]+ba/b"   # DASH + mescla (ffmpeg); o YouTube não serve mais arquivo único em 720p
+  # Busca com intenção comercial (--comercial): "<intenção> <ramo>" para cada nicho. Foca em vídeos que ensinam a vender/operar.
+  intencoes_comerciais: ["como vender", "como divulgar", "como atrair clientes", "quanto cobrar", "estratégia de vendas"]
+  ramo_busca:
+    cabeleireira: "salão de beleza"
+    esteticista: "clínica de estética"
+    confeiteira: "bolos"
+    marmiteira: "marmitas"
+    loja_roupas: "loja de roupas"
+    bijuteria: "bijuterias"
+    eletricista: "serviço de eletricista"
+    mecanico: "oficina mecânica"
+    professor_particular: "aulas particulares"
+    pet_banho_tosa: "pet shop"
+  # Termos de busca refinados por nicho (src.coleta.youtube_apify --nichos). Sem entrada: 2 termos genéricos.
+  termos_nicho:
+    confeiteira: ["bolo decorado passo a passo", "brigadeiro gourmet vendas", "quanto cobrar bolo de pote", "confeiteira iniciante faturamento"]
+    esteticista: ["limpeza de pele profissional", "design de sobrancelha antes e depois", "maquiagem profissional transformação", "como atrair clientes estética"]
 
 midia:
   gancho_segundos: 3

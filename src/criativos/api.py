@@ -107,25 +107,51 @@ def iniciar_pedido(briefing: dict, com_voz: bool = False, anexos: list[dict] | N
     return job_id
 
 
-def _rodar_edicao(job_id: str, texto: str, anexos: list[dict]) -> None:
-    from src.criativos import sessao_claude
-    def atualizar(**kw):
-        with LOCK:
-            JOBS[job_id].update(kw)
+def _rodar_carrossel(job_id: str, briefing: dict) -> None:
+    from src.criativos import carrossel
     try:
-        r = sessao_claude.editar(texto, anexos, job_id[:12], atualizar)
+        r = carrossel.gerar(briefing, job_id[:12])
+        base = f"/api/carrosseis/{r['carrossel_id']}"
         with LOCK:
-            JOBS[job_id].update(status="done", percent=100, pedido_id=job_id[:12], **r)
+            JOBS[job_id].update(status="done", percent=100, carrossel_id=r["carrossel_id"], titulos=r["titulos"],
+                                slides=[f"{base}/{n}" for n in r["slides"]], zip=f"{base}/carrossel.zip",
+                                legenda=r["legenda"], gerado_por=r["gerado_por"])
     except Exception as exc:
         with LOCK:
             JOBS[job_id].update(status="error", error=str(exc)[:400])
 
 
-def iniciar_edicao(texto: str, anexos: list[dict]) -> str:
+def iniciar_carrossel(briefing: dict) -> str:
+    job_id = uuid.uuid4().hex
+    with LOCK:
+        JOBS[job_id] = {"status": "running", "progress": "Escrevendo e desenhando os slides…"}
+    threading.Thread(target=_rodar_carrossel, args=(job_id, briefing), daemon=True).start()
+    return job_id
+
+
+def _rodar_edicao(job_id: str, texto: str, anexos: list[dict], continuar_de: str | None = None, conversa: str = "") -> None:
+    from src.criativos import sessao_claude
+    def atualizar(**kw):
+        with LOCK:
+            JOBS[job_id].update(kw)
+    try:
+        r = sessao_claude.editar(texto, anexos, job_id[:12], atualizar, continuar_de, conversa)
+        with LOCK:
+            JOBS[job_id].update(status="done", percent=100, pedido_id=job_id[:12], **r)
+    except sessao_claude.Cancelado:
+        sessao_claude.apagar_saida(job_id[:12])  # nada de arquivo pela metade
+        with LOCK:
+            JOBS[job_id].update(status="cancelado", progress="Geração cancelada.")
+    except Exception as exc:
+        with LOCK:
+            JOBS[job_id].update(status="error", error=str(exc)[:400])
+
+
+def iniciar_edicao(texto: str, anexos: list[dict], continuar_de: str | None = None, conversa: str = "") -> str:
     job_id = uuid.uuid4().hex
     with LOCK:
         JOBS[job_id] = {"status": "running", "pedido_id": job_id[:12], "progress": "Abrindo uma sessão do Claude…"}
-    threading.Thread(target=_rodar_edicao, args=(job_id, texto, anexos), daemon=True).start()
+    threading.Thread(target=_rodar_edicao, args=(job_id, texto, anexos, continuar_de, conversa), daemon=True).start()
     return job_id
 
 
@@ -168,6 +194,39 @@ def tratar_get(h) -> bool:
             h._json(200, d)
         else:
             h._json(404, {"error": "Pedido não encontrado."})
+        return True
+    m = re.fullmatch(r"/api/carrosseis/([a-f0-9]{12})/(slide_\d{2}\.png|carrossel\.zip|legenda\.txt)", h.path)
+    if m:
+        from src.criativos.carrossel import SAIDA as SAIDA_CARROSSEL
+        arq = SAIDA_CARROSSEL / m.group(1) / m.group(2)
+        tipo = {"png": "image/png", "zip": "application/zip", "txt": "text/plain; charset=utf-8"}[arq.suffix[1:]]
+        h._servir_arquivo(arq, tipo, m.group(2)) if arq.is_file() else h._json(404, {"error": "Ainda não gerado."})
+        return True
+    if h.path == "/api/sessoes":
+        from src.criativos import sessoes
+        h._json(200, sessoes.listar())
+        return True
+    m = re.fullmatch(r"/api/sessoes/([a-f0-9]{12})/exportar", h.path)
+    if m:
+        from src.criativos import sessoes
+        t = sessoes.exportar(m.group(1))
+        h._json(200 if t else 404, {"texto": t} if t else {"error": "Sessão não encontrada."})
+        return True
+    m = re.fullmatch(r"/api/sessoes/([a-f0-9]{12})", h.path)
+    if m:
+        from src.criativos import sessoes
+        s = sessoes.obter(m.group(1))
+        h._json(200 if s else 404, s or {"error": "Sessão não encontrada."})
+        return True
+    if h.path == "/api/edicoes/ranking":
+        from src.criativos import memoria_reels
+        memoria_reels.pontuar_pendentes()
+        h._json(200, memoria_reels.ranking())
+        return True
+    m = re.fullmatch(r"/api/edicoes/([a-z0-9_]{3,40})/capa_refs", h.path)
+    if m:
+        from src.criativos import memoria_reels
+        h._json(200, memoria_reels.capa_referencias(m.group(1)))
         return True
     m = re.fullmatch(r"/api/edicoes/([a-f0-9]{12})/(final\.mp4|capa\.jpg|decupagem\.md|roteiro\.md|legenda\.txt|creditos_audio\.md|resumo\.md)", h.path)
     if m:
@@ -252,6 +311,14 @@ def _claude_post(h) -> bool:
     return True
 
 
+def _anexos_info(ids) -> list[dict]:
+    from src.criativos import midia_propria
+    try:
+        return midia_propria.resolver(ids) if ids else []
+    except ValueError:
+        return []
+
+
 def tratar_post(h) -> bool:
     if h.path.startswith("/api/claude/"):
         return _claude_post(h)
@@ -270,15 +337,45 @@ def tratar_post(h) -> bool:
         except (ValueError, OSError) as exc:
             h._json(400, {"error": str(exc)})
         return True
+    m = re.fullmatch(r"/api/pedido/anexo/([a-f0-9]{32})/apagar", h.path)
+    if m:
+        if not _so_local(h):
+            return True
+        from src.criativos import midia_propria
+        h._json(200, {"apagado": midia_propria.apagar_anexo(m.group(1))})
+        return True
+    m = re.fullmatch(r"/api/edicao/([a-f0-9]{32})/cancelar", h.path)
+    if m:
+        if not _so_local(h):
+            return True
+        from src.criativos import sessao_claude
+        with LOCK:
+            existe = JOBS.get(m.group(1), {}).get("status") == "running"
+        if existe:
+            sessao_claude.cancelar(m.group(1)[:12])
+        h._json(200, {"cancelando": existe})
+        return True
     if h.path.startswith("/api/pedido/anexo?"):
         if not _so_local(h):
             return True
         from urllib.parse import parse_qs, urlparse
         from src.criativos import midia_propria
-        nome = parse_qs(urlparse(h.path).query).get("filename", [""])[0]
+        q = parse_qs(urlparse(h.path).query)
+        nome = q.get("filename", [""])[0]
         try:
-            h._json(201, midia_propria.salvar_anexo(nome, h.rfile, int(h.headers.get("Content-Length", "0"))))
+            h._json(201, midia_propria.salvar_anexo(nome, h.rfile, int(h.headers.get("Content-Length", "0")),
+                                                    q.get("papel", [None])[0]))
         except (ValueError, OSError) as exc:
+            h._json(400, {"error": str(exc)})
+        return True
+    m = re.fullmatch(r"/api/edicoes/([a-z0-9_]{3,40})/desempenho", h.path)
+    if m:
+        if not _so_local(h):
+            return True
+        from src.criativos import memoria_reels
+        try:
+            h._json(200, memoria_reels.registrar_desempenho(m.group(1), _json_body(h, 2000)))
+        except ValueError as exc:
             h._json(400, {"error": str(exc)})
         return True
     if h.path == "/api/edicao/iniciar":
@@ -295,7 +392,73 @@ def tratar_post(h) -> bool:
         if not str(d.get("texto", "")).strip() and not anexos:
             h._json(400, {"error": "Descreva o vídeo ou anexe material."})
             return True
-        h._json(202, {"job_id": iniciar_edicao(str(d.get("texto", "")), anexos)})
+        continuar = str(d.get("continuar_de") or "") or None
+        if continuar and not re.fullmatch(r"[a-f0-9]{12}", continuar):
+            h._json(400, {"error": "Vídeo anterior inválido."})
+            return True
+        conversa = ""
+        if continuar and d.get("sessao_id"):
+            from src.criativos import sessoes
+            ses = sessoes.obter(str(d["sessao_id"])) if re.fullmatch(r"[a-f0-9]{12}", str(d["sessao_id"])) else None
+            if ses:
+                conversa = "\n".join(f"{'PESSOA' if m['papel'] == 'pessoa' else 'ASSISTENTE'}: {m['texto'][:1200]}"
+                                     for m in ses["mensagens"][-8:])[-4000:]
+        h._json(202, {"job_id": iniciar_edicao(str(d.get("texto", "")), anexos, continuar, conversa)})
+        return True
+    if h.path.startswith("/api/sessoes"):
+        if not _so_local(h):
+            return True
+        from src.criativos import sessoes
+        d = _json_body(h, 200000)
+        m = re.fullmatch(r"/api/sessoes/([a-f0-9]{12})/(renomear|apagar|voltar)", h.path)
+        try:
+            if h.path == "/api/sessoes/salvar":
+                h._json(200, sessoes.salvar(d.get("id") or None, str(d.get("tipo", "")), d.get("mensagens"),
+                                            d.get("artefatos"), str(d.get("perfil", "")), str(d.get("titulo", "")),
+                                            str(d.get("modo", "")), _anexos_info(d.get("anexos"))))
+            elif m and m.group(2) == "voltar":
+                h._json(200, sessoes.voltar(m.group(1), d.get("n", 2)))
+            elif m and m.group(2) == "renomear":
+                h._json(200, sessoes.renomear(m.group(1), str(d.get("titulo", ""))))
+            elif m:
+                sessoes.apagar(m.group(1))
+                h._json(200, {"ok": True})
+            else:
+                return False
+        except ValueError as exc:
+            h._json(400, {"error": str(exc)})
+        return True
+    if h.path == "/api/entrevista/responder":
+        if not _so_local(h):
+            return True
+        d = _json_body(h, 60000)
+        from src.criativos import entrevista
+        try:
+            videos = ""
+            transc = ""
+            if d.get("anexos"):
+                from src.criativos import midia_propria
+                try:
+                    vids = [x for x in midia_propria.resolver(d["anexos"]) if x["tipo"] == "video"]
+                    videos = "; ".join(f"{x['nome']} ({x.get('duracao_s')} s)" for x in vids)
+                    if str(d.get("modo")) == "edicao":
+                        transc = entrevista.transcricao_videos(vids)
+                except ValueError:
+                    videos = ""
+            h._json(200, {"resposta": entrevista.responder(d.get("historico") or [], str(d.get("perfil", "MPE")),
+                                                           str(d.get("segmento", "")), str(d.get("contexto", "")),
+                                                           str(d.get("modo", "motion")), videos, transc)})
+        except (ValueError, RuntimeError) as exc:
+            h._json(400, {"error": str(exc)})
+        return True
+    if h.path == "/api/carrossel/gerar":
+        if not _so_local(h):
+            return True
+        b = _json_body(h, 20000).get("briefing") or {}
+        if b.get("perfil_id") not in carregar_perfis_todos():
+            h._json(400, {"error": "Falta o ramo do negócio (perfil_id)."})
+            return True
+        h._json(202, {"job_id": iniciar_carrossel(b)})
         return True
     if h.path == "/api/pedido/interpretar":
         from src.criativos import conversa

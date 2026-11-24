@@ -53,6 +53,23 @@ def transcrever_arquivo(caminho: Path) -> dict:
     return {"texto": texto, "duracao_s": round(info.duration, 1), "idioma": info.language}
 
 
+def transcrever_com_tempos(caminho: Path) -> dict:
+    """Como transcrever_arquivo, mas com início/fim por frase e por palavra (para sincronizar cenas e legenda)."""
+    with tempfile.TemporaryDirectory(prefix="trans_") as tmp:
+        wav = Path(tmp) / "fala.wav"
+        para_wav(Path(caminho), wav)
+        import wave
+        import numpy as np
+        with wave.open(str(wav), "rb") as w:
+            audio = np.frombuffer(w.readframes(w.getnframes()), dtype=np.int16).astype(np.float32) / 32768.0
+        segs, info = _modelo().transcribe(audio, language="pt", vad_filter=True, beam_size=5, word_timestamps=True,
+                                          initial_prompt=PEDIDO_PROMPT, condition_on_previous_text=False)
+        frases = [{"inicio": round(s.start, 2), "fim": round(s.end, 2), "texto": s.text.strip(),
+                   "palavras": [{"p": w.word.strip(), "i": round(w.start, 2), "f": round(w.end, 2)} for w in (s.words or [])]}
+                  for s in segs]
+    return {"duracao_s": round(info.duration, 1), "frases": frases, "texto": " ".join(f["texto"] for f in frases)}
+
+
 def transcrever_bytes(dados: bytes, sufixo: str = ".webm") -> dict:
     if not dados or len(dados) > MAX_BYTES:
         raise ValueError("Áudio vazio ou maior que 25 MB.")

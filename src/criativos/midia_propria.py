@@ -39,10 +39,40 @@ def tipo_do_arquivo(nome: str) -> str | None:
     return next((t for t, (exts, _) in TIPOS.items() if suf in exts), None)
 
 
-def salvar_anexo(filename: str, source, length: int) -> dict:
+NARRACAO_EXT = {".webm", ".ogg", ".oga", ".mp4", ".m4a", ".wav", ".mp3", ".aac"}
+NARRACAO_MAX_S = 300
+NARRACAO_MIN_S = 1
+
+
+def _duracao_real(arquivo: Path, probe: dict) -> float:
+    """Duração do cabeçalho; se faltar (comum em gravações do navegador: webm sem duração), decodifica e mede."""
+    try:
+        d = float(probe.get("format", {}).get("duration"))
+        if d > 0:
+            return round(d, 1)
+    except (TypeError, ValueError):
+        pass
+    import subprocess
+    from src.core.ffmpeg import _bin
+    r = subprocess.run([_bin("ffmpeg"), "-hide_banner", "-nostats", "-i", str(arquivo), "-vn", "-f", "null", "-"],
+                       capture_output=True, text=True)
+    tempos = re.findall(r"time=(\d+):(\d+):(\d+(?:\.\d+)?)", r.stderr)
+    if not tempos:
+        return 0.0
+    h, m, sg = tempos[-1]
+    return round(int(h) * 3600 + int(m) * 60 + float(sg), 1)
+
+
+def salvar_anexo(filename: str, source, length: int, papel: str | None = None) -> dict:
     """Grava um arquivo enviado (corpo bruto) e valida; devolve {anexo_id, nome, tipo, duracao_s}."""
     nome = Path(filename or "").name
     tipo = tipo_do_arquivo(nome)
+    if papel == "narracao":  # gravação do navegador (webm/ogg/mp4): sempre áudio
+        if Path(nome).suffix.lower() not in NARRACAO_EXT:
+            raise ValueError("Formato de gravação não aceito.")
+        tipo = "audio"
+    elif papel:
+        raise ValueError("Papel de arquivo inválido.")
     if tipo is None:
         raise ValueError("Formato não aceito. Envie vídeo (MP4, MOV, WebM, MKV), foto (JPG, PNG, WebP) ou áudio (MP3, WAV, M4A).")
     limite = TIPOS[tipo][1]
@@ -75,18 +105,35 @@ def salvar_anexo(filename: str, source, length: int) -> dict:
             streams = {s.get("codec_type") for s in probe.get("streams", [])}
             if ("video" if tipo == "video" else "audio") not in streams:
                 raise ValueError("O arquivo não tem uma faixa de " + ("vídeo" if tipo == "video" else "áudio") + " válida.")
-            duracao = round(float(probe.get("format", {}).get("duration", 0) or 0), 1)
+            duracao = _duracao_real(destino, probe)
             if tipo == "audio" and not 0 < duracao <= 900:
                 raise ValueError("O áudio deve ter entre 1 segundo e 15 minutos.")
+            if papel == "narracao" and not NARRACAO_MIN_S <= duracao <= NARRACAO_MAX_S:
+                raise ValueError(f"A narração deve ter entre {NARRACAO_MIN_S} segundo e {NARRACAO_MAX_S // 60} minutos.")
     except Exception as exc:
         shutil.rmtree(pasta, ignore_errors=True)
         if isinstance(exc, ValueError):
             raise
         raise ValueError("Não consegui ler esse arquivo. Confira se ele abre normalmente.") from exc
     info = {"anexo_id": aid, "nome": nome, "tipo": tipo, "duracao_s": duracao, "caminho": str(destino)}
+    if papel:
+        info["papel"] = papel
     with _LOCK:
         ANEXOS[aid] = info
     return {k: v for k, v in info.items() if k != "caminho"}
+
+
+def apagar_anexo(aid: str) -> bool:
+    """Remove o arquivo enviado (disco + registro). Só atua dentro de workspace/chat_anexos/<id>."""
+    if not isinstance(aid, str) or not re.fullmatch(r"[a-f0-9]{32}", aid):
+        raise ValueError("Arquivo inválido.")
+    with _LOCK:
+        existia = ANEXOS.pop(aid, None) is not None
+    pasta = workspace() / "chat_anexos" / aid
+    if pasta.is_dir():
+        shutil.rmtree(pasta, ignore_errors=True)
+        existia = True
+    return existia
 
 
 def registrar_arquivo_local(caminho: Path) -> dict:

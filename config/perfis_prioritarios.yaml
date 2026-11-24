@@ -203,3 +203,138 @@ perfis:
     destaque: {valor: "1 pet", rotulo: "por vez, sem fila e sem estresse"}
     prova: "Tutor que volta sempre"
     cta: "Marque o horário no WhatsApp"
+
+# =============================================================================
+# Ramos FORA dos 10 prioritários. Não entram em listar/lote (continuam 10); só atendem o pedido por conversa.
+# Ordem de busca: 10 prioritários → padaria/genéricos por segmento (palavras abaixo) → "geral" (nunca trava a pessoa).
+# O texto é neutro de propósito: oferta, preço e diferencial ditos pela pessoa entram por cima (aplicar_briefing).
+# `segmento` aponta o segmento CNAE só para escolher referências afins na base de Reels.
+# =============================================================================
+sinonimos_genericos:
+  padaria: [padaria, padeiro, padeira, pao, paes, panificadora, panificacao, paozinho, pao frances, pao de queijo, pao caseiro, broa, rosca, "pão", "pães", "padaria e confeitaria"]
+  alimentacao_geral: [lanchonete, hamburguer, hamburgueria, pizza, pizzaria, acai, sorvete, sorveteria, doceria, cafeteria, cafe, churrasco, espetinho, sushi, pastel, pastelaria, tapioca, mercado, mercadinho, hortifruti, acougue, sacolao, quitanda, empada, coxinha, salgaderia, "cachorro quente", "hot dog", bar, "açaí", "café"]
+  beleza_geral: [spa, massagem, massagista, tatuagem, tatuador, tatuadora, podologia, podologa, cosmeticos, perfumaria, lash, "nail designer", "bem estar", bronzeamento, "estetica corporal", "design de sobrancelha"]
+  varejo_geral: [papelaria, farmacia, floricultura, flores, brinquedos, calcados, sapatos, moveis, decoracao, presentes, artesanato, bolsas, lingerie, oculos, mercearia, armarinho, livraria, utilidades, "material de construcao", "loja de celular", "loja de presentes", "farmácia"]
+  servicos_tecnicos_geral: [encanador, hidraulica, pedreiro, pintor, marceneiro, chaveiro, "ar condicionado", "ar-condicionado", refrigeracao, "assistencia tecnica", informatica, vidraceiro, serralheiro, jardineiro, dedetizacao, mudanca, frete, limpeza, diarista, faxina, lavanderia, "lava jato", "lava-jato", soldador, gesseiro, telhado, impermeabilizacao, instalador, motoboy]
+  ensino_geral: [personal, "personal trainer", academia, pilates, yoga, ioga, nutricionista, psicologo, psicologa, terapeuta, fotografo, fotografa, designer, contador, contabilidade, advogado, advogada, consultoria, curso, cursos, coach, musica, danca, violao, treino, crossfit, fisioterapeuta, massoterapia, mentoria, adestrador, veterinario, veterinaria]
+
+perfis_genericos:
+  - id: padaria
+    nome: "Padaria / Panificação"
+    cnae: "1091-1/01"
+    segmento: alimentacao
+    format_id: 2
+    negocio: "Padaria Pão Quente"
+    cta_canal: "WhatsApp"
+    paleta: {fundo1: "#3B1F14", fundo2: "#B5651D", destaque: "#FFD27F", acento: "#FF8A3D", texto: "#FFFFFF"}
+    gancho: "Cheirinho de pão quente"
+    dor: "Pão amanhecido que perde o sabor"
+    agitacao: ["Pão duro no dia seguinte", "Café da manhã sem graça"]
+    solucao: ["Fornada fresca todo dia", "Massa feita com calma", "Do pãozinho ao bolo caseiro"]
+    antes: "Café da manhã sem graça"
+    depois: "Mesa farta e cheirosa"
+    destaque: {valor: "7 dias", rotulo: "por semana com pão quentinho"}
+    prova: "Freguês que volta toda manhã"
+    cta: "Peça pelo WhatsApp"
+  - id: alimentacao_geral
+    nome: "Alimentação (geral)"
+    cnae: ""
+    segmento: alimentacao
+    format_id: 2
+    negocio: "Seu Negócio"
+    cta_canal: "WhatsApp"
+    paleta: {fundo1: "#3B1F14", fundo2: "#C0562B", destaque: "#FFD27F", acento: "#FF8A3D", texto: "#FFFFFF"}
+    gancho: "Já provou o nosso?"
+    dor: "Vontade de algo feito com carinho"
+    agitacao: ["Comida sem graça", "Pedido que demora"]
+    solucao: ["Feito com cuidado", "Ingredientes escolhidos", "Sabor de casa"]
+    antes: "Fome e pouca opção"
+    depois: "Mesa farta e feliz"
+    destaque: {valor: "100%", rotulo: "feito com carinho"}
+    prova: "Quem prova volta"
+    cta: "Peça pelo WhatsApp"
+  - id: beleza_geral
+    nome: "Beleza e bem-estar (geral)"
+    cnae: ""
+    segmento: beleza
+    format_id: 1
+    negocio: "Seu Negócio"
+    cta_canal: "WhatsApp"
+    paleta: {fundo1: "#33102B", fundo2: "#B04C8F", destaque: "#FFD6E8", acento: "#FF7BB5", texto: "#FFFFFF"}
+    gancho: "Veja a transformação"
+    dor: "Cuidado que falta na rotina"
+    agitacao: ["Correria sem tempo pra você", "Resultado que não dura"]
+    solucao: ["Atendimento com hora marcada", "Cuidado do começo ao fim", "Resultado que você vê"]
+    antes: "Rotina sem cuidado"
+    depois: "Autoestima lá em cima"
+    destaque: {valor: "1 hora", rotulo: "de cuidado só pra você"}
+    prova: "Cliente que volta sempre"
+    cta: "Agende pelo WhatsApp"
+  - id: varejo_geral
+    nome: "Comércio (geral)"
+    cnae: ""
+    segmento: varejo_moda
+    format_id: 3
+    negocio: "Seu Negócio"
+    cta_canal: "WhatsApp"
+    paleta: {fundo1: "#0F2D4A", fundo2: "#2E6FA7", destaque: "#FFE08A", acento: "#6EC1FF", texto: "#FFFFFF"}
+    gancho: "Achei o que eu queria"
+    dor: "Procurar muito e não achar"
+    agitacao: ["Loja sem novidade", "Atendimento que ignora você"]
+    solucao: ["Produtos escolhidos a dedo", "Atendimento de verdade", "Fácil de pedir"]
+    antes: "Procurando sem achar"
+    depois: "Achou e levou"
+    destaque: {valor: "100%", rotulo: "atendimento de verdade"}
+    prova: "Cliente que indica pra amiga"
+    cta: "Chame no WhatsApp"
+  - id: servicos_tecnicos_geral
+    nome: "Serviços técnicos (geral)"
+    cnae: ""
+    segmento: servicos_tecnicos
+    format_id: 4
+    negocio: "Seu Negócio"
+    cta_canal: "WhatsApp"
+    paleta: {fundo1: "#1C1C1C", fundo2: "#3C4A57", destaque: "#FFB400", acento: "#FF6A3D", texto: "#FFFFFF"}
+    gancho: "Problema sem solução?"
+    dor: "Serviço mal feito que volta a dar problema"
+    agitacao: ["Gasto em dobro", "Prazo que ninguém cumpre"]
+    solucao: ["Diagnóstico antes de começar", "Orçamento claro", "Serviço bem feito"]
+    antes: "Problema que se repete"
+    depois: "Resolvido de vez"
+    destaque: {valor: "1 visita", rotulo: "pra entender e orçar"}
+    prova: "Cliente indica pro vizinho"
+    cta: "Peça orçamento no WhatsApp"
+  - id: ensino_geral
+    nome: "Ensino e serviços locais (geral)"
+    cnae: ""
+    segmento: ensino_servicos_locais
+    format_id: 5
+    negocio: "Seu Negócio"
+    cta_canal: "WhatsApp"
+    paleta: {fundo1: "#12263A", fundo2: "#2A6F6B", destaque: "#F6E58D", acento: "#7FD1B9", texto: "#FFFFFF"}
+    gancho: "Quer resultado de verdade?"
+    dor: "Falta acompanhamento de perto"
+    agitacao: ["Tentar sozinho e desistir", "Método que não serve pra você"]
+    solucao: ["Atenção no seu objetivo", "Plano feito pra você", "Acompanhamento de perto"]
+    antes: "Tentando sozinho"
+    depois: "Evoluindo com orientação"
+    destaque: {valor: "1ª aula", rotulo: "pra conhecer o método"}
+    prova: "Aluno que indica amigo"
+    cta: "Chame no WhatsApp"
+  - id: geral
+    nome: "Negócio local (geral)"
+    cnae: ""
+    segmento: ""
+    format_id: 5
+    negocio: "Seu Negócio"
+    cta_canal: "WhatsApp"
+    paleta: {fundo1: "#1B1B2F", fundo2: "#4B3F72", destaque: "#FFD166", acento: "#06D6A0", texto: "#FFFFFF"}
+    gancho: "Você já conhece?"
+    dor: "Falta de tempo pra procurar"
+    agitacao: ["Muita opção e pouca confiança", "Atendimento que não responde"]
+    solucao: ["Atendimento de verdade", "Qualidade que você vê", "Fácil de pedir"]
+    antes: "Sem saber onde procurar"
+    depois: "Achou quem resolve"
+    destaque: {valor: "1 mensagem", rotulo: "e a gente responde"}
+    prova: "Cliente que volta"
+    cta: "Chame no WhatsApp"

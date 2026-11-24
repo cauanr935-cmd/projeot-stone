@@ -21,13 +21,13 @@ mcp = FastMCP("ImpulsoStone-Reels-Engine",
               instructions="Produza Reels verticais offline-first para microempreendedores Impulso Stone.")
 
 
-@mcp.resource("stone-cnae://profiles/{cnae_code}", name="Perfil CNAE",
-              description="Perfil de marketing e formato recomendado para um CNAE.")
+@mcp.resource("stone-cnae://profiles/{cnae_code}", name="Perfil do ramo do negócio",
+              description="Como fazer marketing e qual modelo de Reel combina com o ramo do negócio.")
 def cnae_resource(cnae_code: str) -> str:
     return get_cnae_marketing_profile(cnae_code)
 
 
-@mcp.resource("stone-formats://catalog", name="Catálogo de formatos")
+@mcp.resource("stone-formats://catalog", name="Modelos de Reel disponíveis", description="Lista dos 5 modelos de Reel, com duração e etapas de cada um.")
 def formats_resource() -> str:
     formats = load_formats()
     catalog = [{"id": f["id"], "key": f["key"], "name": f["name"], "focus": f["focus"],
@@ -37,18 +37,18 @@ def formats_resource() -> str:
     return json.dumps({"formats": catalog}, ensure_ascii=False)
 
 
-@mcp.resource("stone-media://jobs/{job_id}/analysis_summary", name="Resumo da análise de mídia")
+@mcp.resource("stone-media://jobs/{job_id}/analysis_summary", name="Resumo dos seus vídeos", description="O que foi encontrado nos vídeos e fotos enviados (melhores trechos, cenas).")
 def analysis_summary_resource(job_id: str) -> str:
     path = Path(os.getenv("REELS_WORKSPACE", "./workspace")) / "jobs" / job_id / "multimodal_summary.json"
     return path.read_text(encoding="utf-8") if path.exists() else json.dumps({"status": "pending_analysis"})
 
 
-@mcp.resource("stone-quota://router/status", name="Status do roteador")
+@mcp.resource("stone-quota://router/status", name="Situação das ferramentas de IA", description="Quais recursos (voz, imagem etc.) estão disponíveis agora.")
 def quota_resource() -> str:
     return json.dumps({"status": "router_not_initialized"})
 
 
-@mcp.prompt("gerar_reel_impulso_stone")
+@mcp.prompt("gerar_reel_impulso_stone", title="Criar um Reel com os seus vídeos", description="Escolhe o melhor modelo de Reel para o seu tipo de negócio e monta com os seus vídeos e fotos.")
 def gerar_reel_impulso_stone(cnae_code: str, objetivo_venda: str, job_id: str = "job") -> str:
     profile = json.loads(get_cnae_marketing_profile(cnae_code))
     return (f"Crie um Reel para {profile['ocupacao']} com objetivo: {objetivo_venda}. "
@@ -67,27 +67,27 @@ def _format_prompt(format_id: int, cnae_code: str, objetivo_venda: str, job_id: 
             f"assemble_and_render_reel para o job {job_id or 'atual'}.{loop}")
 
 
-@mcp.prompt("reel_bab")
+@mcp.prompt("reel_bab", title="Reel Antes e Depois", description="Mostra como era o problema, como ficou depois e como chegar lá. Bom para transformação (corte de cabelo, reforma, vendas).")
 def reel_bab(cnae_code: str, objetivo_venda: str, job_id: str | None = None) -> str:
     return _format_prompt(1, cnae_code, objetivo_venda, job_id)
 
 
-@mcp.prompt("reel_product_demo_pas")
+@mcp.prompt("reel_product_demo_pas", title="Reel Mostrando o Produto", description="Mostra o produto em uso, o problema que ele resolve e a solução. Bom para quem vende um produto.")
 def reel_product_demo_pas(cnae_code: str, objetivo_venda: str, job_id: str | None = None) -> str:
     return _format_prompt(2, cnae_code, objetivo_venda, job_id)
 
 
-@mcp.prompt("reel_ugc_testimonial")
+@mcp.prompt("reel_ugc_testimonial", title="Reel Depoimento de Cliente", description="Um cliente real conta como foi, no estilo de vídeo caseiro. Bom para gerar confiança.")
 def reel_ugc_testimonial(cnae_code: str, objetivo_venda: str, job_id: str | None = None) -> str:
     return _format_prompt(3, cnae_code, objetivo_venda, job_id)
 
 
-@mcp.prompt("reel_pas")
+@mcp.prompt("reel_pas", title="Reel Problema e Solução", description="Aponta o problema do cliente, aumenta a urgência e entrega a solução. Direto e curto.")
 def reel_pas(cnae_code: str, objetivo_venda: str, job_id: str | None = None) -> str:
     return _format_prompt(4, cnae_code, objetivo_venda, job_id)
 
 
-@mcp.prompt("reel_aida")
+@mcp.prompt("reel_aida", title="Reel Chamar Atenção e Vender", description="Prende a atenção, desperta interesse e desejo e termina chamando para comprar.")
 def reel_aida(cnae_code: str, objetivo_venda: str, job_id: str | None = None) -> str:
     return _format_prompt(5, cnae_code, objetivo_venda, job_id)
 
@@ -192,14 +192,14 @@ async def assemble_and_render_reel(edit_plan_path: str | None = None, edit_plan:
 
 
 # ------------------------------------------------------------------ criativos (motion graphics)
-@mcp.resource("stone-criativos://perfis", name="Perfis prioritários de MPE",
-              description="10 perfis de MPE com material de marca, dor, solução, CTA e formato.")
+@mcp.resource("stone-criativos://perfis", name="Perfis de pequenos negócios",
+              description="10 tipos de pequeno negócio, com a dor do cliente, a solução e o que pedir no final do vídeo.")
 def perfis_resource() -> str:
     from src.criativos.spec import carregar_perfis
     return json.dumps(carregar_perfis(), ensure_ascii=False)
 
 
-@mcp.prompt("criar_criativo_motion")
+@mcp.prompt("criar_criativo_motion", title="Criar vídeo animado (sem gravar)", description="Cria um vídeo animado, com texto e movimento, para o seu tipo de negócio. Não precisa de vídeo gravado.")
 def criar_criativo_motion(perfil_id: str, instrucoes: str = "") -> str:
     return (f"Crie um criativo em motion graphics para o perfil '{perfil_id}'. 1) Chame briefing_criativo; "
             "2) escreva você mesmo o CriativoSpec (JSON) seguindo regras e schema; 3) chame "
