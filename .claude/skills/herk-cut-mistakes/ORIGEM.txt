@@ -1,0 +1,1 @@
+nateherkai/herk-edit-kit @ 10511e5af86fc47756ea89803b397422e2d89284 (MIT), skill cut-mistakes. Auditado: só instruções em Markdown (e npx hyperframes/serve citados como comandos). Setup do kit (npm run setup) NÃO rodado. Skills de motion não copiadas.

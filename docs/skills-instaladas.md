@@ -10,7 +10,7 @@ Auditoria: leitura de SKILL.md e scripts, busca por rede, `shell=True`, `sudo`, 
 | 3 | YouTube Agent | NÃO ENCONTRADO | n/d | n/d | Idem |
 | 4 | Skill Creator | INSTALADO | anthropics/skills `e4bb5d9` | Apache-2.0 | Oficial. Único link externo: Google Fonts em relatório HTML |
 | 5 | Video Use | INSTALADO (parcial) | browser-use/video-use `43cfc56` | MIT | Transcrição usa ElevenLabs Scribe (`ELEVENLABS_API_KEY`). Sem chave, usar a transcrição local do projeto |
-| 6 | Herk Edit Kit | PENDENTE | nateherkai/herk-edit-kit | MIT (segundo listagens) | Repositório >360 MB, clone ainda não terminou. Setup oficial usa `npm run setup`, que não será rodado sem revisão |
+| 6 | Herk Edit Kit | INSTALADO (parcial) | nateherkai/herk-edit-kit `10511e5` | MIT | 4 das 15 skills (herk-cut-mistakes, herk-cut-silences, herk-edit-video, herk-short-form-edit), só Markdown. As de motion/HyperFrames e `npm run setup` ficaram de fora. Transcrição do kit usa ElevenLabs |
 | 7 | FFmpeg Skill | INSTALADO | kajisho5/ffmpeg-skill `bad487c` | MIT | Python stdlib, sem rede. ffmpeg 6.1.1 local OK |
 | 8 | OpenChatCut | PULADO | 0xsline/OpenChatCut | AGPL | App desktop e licença AGPL; exige decisão humana (ADR-006) |
 | 9 | HyperFrames | JÁ EXISTIA | (anterior à spec) | n/d | Motion graphics, fora do fluxo com pessoas |
@@ -31,4 +31,4 @@ Auditoria: leitura de SKILL.md e scripts, busca por rede, `shell=True`, `sudo`, 
 2. `yt-dlp` para o /watch com URLs; venv do `video-effects` (comando acima).
 3. Decidir sobre AGPL (OpenChatCut, OpenMontage).
 4. Confirmar o que são Visual Skills, YouTube Agent, Motion Skills, Motion Graphics e Video Toolkit (nomes do carrossel sem fonte clara).
-5. Herk Edit Kit: terminar o clone e auditar antes de instalar.
+5. Herk Edit Kit: as demais 11 skills (motion/HyperFrames) não foram instaladas; avaliar se quiser.
