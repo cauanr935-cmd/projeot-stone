@@ -1,0 +1,155 @@
+fonte: 636 Reels da base (top 10% x controle); gerado por src/analise/edicao_padroes.py
+ritmo:
+  cortes_por_min:
+    p25: 0.0
+    mediana: 1.39
+    p75: 7.38
+  duracao_plano_s:
+    p25: 4.25
+    mediana: 11.25
+    p75: 35.0
+  primeiro_corte_s:
+    p25: 2.94
+    mediana: 5.25
+    p75: 11.87
+  pct_com_corte_nos_3s: 16.9
+camera:
+  pct_planos_push_in: 19.5
+  pct_planos_pull_out: 30.6
+  punch_in_por_min:
+    p25: 0.0
+    mediana: 0.0
+    p75: 0.0
+ganchos_por_frequencia:
+- tipo: numero_valor
+  pct_top: 23.8
+  lift_vs_controle: 1.8
+  molde: 'Número concreto no 1º segundo: «R$ [valor] / [N]% / [N] erros que [consequência]»'
+- tipo: pergunta
+  pct_top: 20.6
+  lift_vs_controle: 1.4
+  molde: 'Pergunta direta sobre a dor ou o desejo do cliente: «Você ainda [faz X] sem saber [consequência]?»'
+- tipo: urgencia_novidade
+  pct_top: 10.1
+  lift_vs_controle: 1.32
+  molde: 'Novidade/urgência: «Mudou [coisa] e quase ninguém [agiu]»'
+- tipo: segmentacao
+  pct_top: 9.5
+  lift_vs_controle: 2.35
+  molde: 'Chama o público pelo nome: «Se você é [perfil] e [situação], pare e veja isso»'
+- tipo: promessa_como
+  pct_top: 4.2
+  lift_vs_controle: 0.93
+  molde: 'Promessa + método: «Como [resultado] em [prazo/passos], sem [obstáculo]»'
+gancho:
+  primeira_palavra_ate_0_5s_pct_top: 71.1
+ctas_por_frequencia:
+- tipo: siga
+  pct_top: 23.1
+  lift_vs_controle: 1.66
+- tipo: comente
+  pct_top: 14.4
+  lift_vs_controle: 2.07
+- tipo: salve_compartilhe
+  pct_top: 10.3
+  lift_vs_controle: 1.48
+- tipo: direct_whats
+  pct_top: 7.2
+  lift_vs_controle: 0.91
+- tipo: link_bio
+  pct_top: 1.0
+  lift_vs_controle: 2.07
+legenda:
+  n_hashtags:
+    p25: 0.0
+    mediana: 4.0
+    p75: 5.0
+  caracteres_legenda:
+    p25: 180.0
+    mediana: 396.0
+    p75: 719.0
+  pct_com_emoji: 57.4
+  pct_primeira_linha_pergunta: 18.1
+  pct_cta_na_legenda: 43.4
+  palavras_primeira_linha:
+    p25: 7.0
+    mediana: 12.0
+    p75: 18.0
+hashtags_top:
+- empreendedorismo
+- mei
+- contabilidade
+- gestaofinanceira
+- negocios
+- vendas
+- microempreendedor
+- gestao
+- gestãofinanceira
+- simplesnacional
+- fluxodecaixa
+- receitafederal
+- gestaodenegocios
+- empreendedorismofeminino
+- liderança
+hashtags_por_segmento:
+  alimentacao_delivery:
+  - empreendedorismo
+  artesanato_varejo: []
+  bancos_fintechs:
+  - empreendedorismo
+  contabilidade:
+  - contabilidade
+  - mei
+  - empreendedorismo
+  - reformatributária
+  - pixmei
+  - simplesnacional
+  - perdaodasdividas
+  - microempreendedor
+  - prosperamei
+  - impostos
+  - notafiscal
+  - receitafederal
+  contabilidade_mei:
+  - mei
+  - contabilidade
+  - empreendedorismo
+  - simplesnacional
+  - receitafederal
+  - microempreendedor
+  - impostoderenda
+  economia_negocios:
+  - empreendedorismo
+  - negócios
+  educacao_empreendedora: []
+  empreendedorismo: []
+  empreendedorismo_startups: []
+  gestao_empresarial:
+  - empreendedorismo
+  - gestaoempresarial
+  - gestaodenegocios
+  - lucro
+  - gestaofinanceira
+  - lideranca
+  - gestãofinanceira
+  - gestãoempresarial
+  - processos
+  - fluxodecaixa
+  - vendas
+  - gestão
+  gestao_ferramentas: []
+  gestao_financeira:
+  - empreendedorismo
+  - gestao
+  - gestaofinanceira
+  - fluxodecaixa
+  - sucesso
+  - empresa
+  precificacao: []
+  varejo:
+  - hortifruti
+  vendas_ecommerce:
+  - empreendedorismo
+  - vendasonline
+  vendas_marketing:
+  - empreendedorismo

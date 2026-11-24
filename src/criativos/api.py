@@ -83,9 +83,17 @@ def _rodar_pedido(job_id: str, briefing: dict, com_voz: bool, anexos: list[dict]
             r = midia_propria.gerar_com_midia(briefing, anexos, job_id[:12], _progresso(job_id), com_voz)
         else:
             r = conversa.gerar_pedido(briefing, com_voz, pedido_id=job_id[:12])
+        try:
+            from src.analise import legenda_hashtags
+            from src.criativos import conversa as _cv
+            leg = legenda_hashtags.gerar(briefing.get("negocio") or "Meu negócio", briefing.get("perfil_id", "negocio").replace("_", " "),
+                                         briefing.get("oferta") or "nossa novidade", None, briefing.get("cta_canal"))
+            (_cv.PASTA_PEDIDOS / f"pedido_{r['pedido_id']}.legenda.txt").write_text(leg["legenda"] + "\n", encoding="utf-8")
+        except Exception:
+            pass
         with LOCK:
             JOBS[job_id].update(status="done", trace=r["trace"], pedido_id=r["pedido_id"],
-                                video=f"/api/pedidos/{r['pedido_id']}/video")
+                                video=f"/api/pedidos/{r['pedido_id']}/video", legenda=f"/api/pedidos/{r['pedido_id']}/legenda")
     except Exception as exc:
         with LOCK:
             JOBS[job_id].update(status="error", error=str(exc)[:400])
@@ -144,12 +152,15 @@ def tratar_get(h) -> bool:
         from src.claude_conexao import chat
         h._json(200, {"mensagens": chat.historico()[-50:]})
         return True
-    m = re.fullmatch(r"/api/pedidos/([a-f0-9]{12})(/video)?", h.path)
+    m = re.fullmatch(r"/api/pedidos/([a-f0-9]{12})(/video|/legenda)?", h.path)
     if m:
         from src.criativos import conversa
         pid, video = m.groups()
         mp4, rac = conversa.arquivos_pedido(pid)
-        if video:
+        if video == "/legenda":
+            leg = conversa.PASTA_PEDIDOS / f"pedido_{pid}.legenda.txt"
+            h._servir_arquivo(leg, "text/plain; charset=utf-8", leg.name) if leg.is_file() else h._json(404, {"error": "Sem legenda."})
+        elif video:
             h._servir_arquivo(mp4, "video/mp4", f"criativo-{pid}.mp4") if mp4 else h._json(404, {"error": "Ainda não gerado."})
         elif rac:
             d = json.loads(rac.read_text(encoding="utf-8"))
@@ -158,11 +169,11 @@ def tratar_get(h) -> bool:
         else:
             h._json(404, {"error": "Pedido não encontrado."})
         return True
-    m = re.fullmatch(r"/api/edicoes/([a-f0-9]{12})/(final\.mp4|capa\.jpg|decupagem\.md|creditos_audio\.md|resumo\.md)", h.path)
+    m = re.fullmatch(r"/api/edicoes/([a-f0-9]{12})/(final\.mp4|capa\.jpg|decupagem\.md|roteiro\.md|legenda\.txt|creditos_audio\.md|resumo\.md)", h.path)
     if m:
         from src.criativos.sessao_claude import SAIDA
         arq = SAIDA / m.group(1) / m.group(2)
-        tipo = {"mp4": "video/mp4", "jpg": "image/jpeg", "md": "text/markdown; charset=utf-8"}[arq.suffix[1:]]
+        tipo = {"mp4": "video/mp4", "jpg": "image/jpeg", "md": "text/markdown; charset=utf-8", "txt": "text/plain; charset=utf-8"}[arq.suffix[1:]]
         h._servir_arquivo(arq, tipo, m.group(2)) if arq.is_file() else h._json(404, {"error": "Ainda não gerado."})
         return True
     if h.path == "/api/criativos":
