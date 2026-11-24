@@ -16,8 +16,17 @@ def carregar_perfis() -> dict[str, dict]:
     return {p["id"]: p for p in _read("perfis_prioritarios.yaml")["perfis"]}
 
 
+def carregar_genericos() -> dict[str, dict]:
+    """Padaria + perfis genéricos por segmento + 'geral': só para o pedido por conversa (não entram na lista dos 10)."""
+    return {p["id"]: p for p in _read("perfis_prioritarios.yaml").get("perfis_genericos", [])}
+
+
+def carregar_perfis_todos() -> dict[str, dict]:
+    return {**carregar_perfis(), **carregar_genericos()}
+
+
 def obter_perfil(perfil_id: str) -> dict:
-    perfis = carregar_perfis()
+    perfis = carregar_perfis_todos()
     if perfil_id not in perfis:
         raise KeyError(f"perfil '{perfil_id}' inexistente; opções: {', '.join(perfis)}")
     return perfis[perfil_id]

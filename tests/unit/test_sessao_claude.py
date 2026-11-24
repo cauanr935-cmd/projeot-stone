@@ -45,3 +45,13 @@ def test_sem_binario(monkeypatch):
     monkeypatch.setattr(sc.shutil, "which", lambda _: None)
     with pytest.raises(RuntimeError, match="Claude Code"):
         sc.binario()
+
+
+def test_prompt_sem_midia_cria_do_zero_e_exige_dinamismo(tmp_path):
+    p = sc.montar_prompt("quero divulgar meu bolo", [], tmp_path)
+    assert "do zero" in p and "PROIBIDO" in p and "bolhas" in p
+
+
+def test_prompt_so_foto_usa_o_material(tmp_path):
+    p = sc.montar_prompt("x", [{"tipo": "imagem", "caminho": "/t/a.jpg", "nome": "a.jpg"}], tmp_path)
+    assert "/t/a.jpg" in p and "fotos" in p

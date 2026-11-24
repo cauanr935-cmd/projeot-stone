@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import asyncio
+import uuid
 import json
 import os
 from pathlib import Path
@@ -221,7 +221,7 @@ def briefing_criativo(perfil_id: str, negocio: str | None = None, formato_id: in
 
 
 @mcp.tool()
-async def renderizar_criativo(spec: dict, com_voz: bool = True) -> dict:
+async def renderizar_criativo(spec: dict, com_voz: bool = False) -> dict:
     """Valida e renderiza um CriativoSpec escrito pela IA em MP4 1080x1920 (auditado)."""
     from src.criativos import servico
     return await asyncio.to_thread(servico.renderizar_json, spec, None, com_voz)
@@ -229,7 +229,7 @@ async def renderizar_criativo(spec: dict, com_voz: bool = True) -> dict:
 
 @mcp.tool()
 async def gerar_criativo_perfil(perfil_id: str, negocio: str | None = None, formato_id: int | None = None,
-                                instrucoes: str | None = None, com_voz: bool = True) -> dict:
+                                instrucoes: str | None = None, com_voz: bool = False) -> dict:
     """Gera o criativo de um perfil: LangChain (Claude/Gemini, se houver chave) ou template offline."""
     from src.criativos import servico
     return await asyncio.to_thread(servico.gerar_criativo, perfil_id, None, negocio, formato_id, instrucoes, com_voz)
@@ -246,10 +246,21 @@ def interpretar_pedido(texto: str, estado: dict | None = None) -> dict:
 
 
 @mcp.tool()
-async def gerar_criativo_pedido(briefing: dict, com_voz: bool = True) -> dict:
-    """Gera o criativo (MP4 1080x1920 auditado) a partir do briefing de interpretar_pedido. Retorna caminho, duração e raciocínio."""
-    from src.criativos import conversa
-    r = await asyncio.to_thread(conversa.gerar_pedido, briefing, com_voz)
+async def gerar_criativo_pedido(briefing: dict, com_voz: bool = False, arquivos: list[str] | None = None,
+                                ctx: Context | None = None) -> dict:
+    """Gera o criativo (MP4 1080x1920 auditado) a partir do briefing de interpretar_pedido.
+
+    `arquivos` (opcional): caminhos de vídeos, fotos e áudios dentro do workspace. Com arquivos, o Reel é montado com a mídia
+    do usuário (o 1º áudio vira a trilha); sem arquivos, é um criativo em motion graphics."""
+    from src.criativos import conversa, midia_propria
+    if arquivos:
+        roots = await get_roots(ctx) if ctx else [Path(os.getenv("REELS_WORKSPACE", "./workspace")).resolve()]
+        ids = [(await asyncio.to_thread(midia_propria.registrar_arquivo_local, resolve_allowed_path(c, roots)))["anexo_id"]
+               for c in arquivos]
+        pid = uuid.uuid4().hex[:12]
+        r = await asyncio.to_thread(midia_propria.gerar_com_midia, briefing, midia_propria.resolver(ids), pid, None, com_voz)
+    else:
+        r = await asyncio.to_thread(conversa.gerar_pedido, briefing, com_voz)
     return {"pedido_id": r["pedido_id"], **(r["saida"] or {}), "trace": [{"titulo": t["titulo"], "resumo": t["resumo"]} for t in r["trace"]]}
 
 
@@ -262,7 +273,7 @@ async def transcrever_audio(caminho: str, ctx: Context | None = None) -> dict:
 
 
 @mcp.tool()
-async def gerar_criativos_lote(perfis: list[str] | None = None, com_voz: bool = True) -> list[dict]:
+async def gerar_criativos_lote(perfis: list[str] | None = None, com_voz: bool = False) -> list[dict]:
     """Gera os criativos dos perfis prioritários (todos se `perfis` omitido)."""
     from src.criativos import servico
     return await asyncio.to_thread(servico.gerar_lote, perfis, None, com_voz)

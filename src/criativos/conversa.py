@@ -19,7 +19,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from src.core.config import ROOT, _read
-from src.criativos.spec import carregar_perfis
+from src.criativos.spec import carregar_perfis, carregar_perfis_todos, obter_perfil
 
 log = logging.getLogger("criativos.conversa")
 PASTA_PEDIDOS = ROOT / "output" / "pedidos"
@@ -63,25 +63,42 @@ def _vazio(v: Any) -> bool:
 
 
 # ------------------------------------------------------------------ regras (tier local, sempre disponível)
+def _acertos(palavras: list[str], t: str) -> tuple[int, int]:
+    """(quantas palavras do ramo aparecem, posição da primeira). O ramo costuma vir antes do produto: 'padaria ... bolo'."""
+    pos = [m.start() for w in {_norm(w) for w in palavras}  # 'pao' e 'pão' são a mesma palavra: não contar duas vezes
+           if (m := re.search(rf"(?<!\w){re.escape(w)}(?!\w)", t))]
+    return len(pos), (min(pos) if pos else 10**9)
+
+
 def detectar_perfil(texto: str) -> str | None:
+    """Mais palavras do ramo ganha; empate vai para quem foi dito primeiro; novo empate, para os 10 prioritários.
+    Cobre os 10 prioritários + padaria e genéricos por segmento (farmácia, encanador, personal trainer...)."""
     t = f" {_norm(texto)} "
-    sin = _read("perfis_prioritarios.yaml").get("sinonimos", {})
-    melhor, pontos = None, 0
-    for pid, palavras in sin.items():
-        n = sum(1 for w in palavras if re.search(rf"(?<!\w){re.escape(_norm(w))}(?!\w)", t))
-        if n > pontos:
-            melhor, pontos = pid, n
-    return melhor
+    cfg = _read("perfis_prioritarios.yaml")
+    cand = []
+    for origem, sin in ((0, cfg.get("sinonimos", {})), (1, cfg.get("sinonimos_genericos", {}))):
+        for pid, palavras in sin.items():
+            n, pos = _acertos(palavras, t)
+            if n:
+                cand.append((-n, pos, origem, pid))
+    return min(cand)[3] if cand else None
 
 
 _NOME = r"([A-ZÀ-Ú0-9][\wÀ-ú'&.-]*(?:\s+(?:d[aeo]s?\s+)?[A-ZÀ-Ú0-9][\wÀ-ú'&.-]*){0,3})"
 _PADROES_NOME = [
     rf"(?:chama(?:-se|do|da)?|nome (?:é|e|dele é|dela é)|se chama)\s+(?:de\s+)?[\"“]?{_NOME}",
-    rf"(?:marca|empresa|negócio|negocio|loja|salão|salao|oficina|estúdio|estudio|studio|ateliê|atelie)\s+(?:chamad[oa]\s+)?[\"“]?([A-ZÀ-Ú][\wÀ-ú'&.-]*(?:\s+[A-ZÀ-Ú][\wÀ-ú'&.-]*){{0,3}})",
+    rf"(?:marca|empresa|negócio|negocio|loja|salão|salao|oficina|estúdio|estudio|studio|ateliê|atelie|padaria|confeitaria|lanchonete|pizzaria|cafeteria|restaurante|mercadinho|farmácia|farmacia|barbearia|clínica|clinica|doceria|sorveteria|floricultura|papelaria)\s+(?:chamad[oa]\s+)?[\"“]?([A-ZÀ-Ú][\wÀ-ú'&.-]*(?:\s+[A-ZÀ-Ú][\wÀ-ú'&.-]*){{0,3}})",
 ]
 
 
+_TIPOS = "Padaria|Panificadora|Confeitaria|Lanchonete|Pizzaria|Hamburgueria|Cafeteria|Restaurante|Mercadinho|Mercado|Farmácia|Barbearia|Clínica|Escola|Academia|Doceria|Sorveteria|Açougue|Floricultura|Papelaria|Pet Shop|Petshop"
+_NOME_COM_TIPO = rf"\b((?:{_TIPOS})\s+[A-ZÀ-Ú][\wÀ-ú'&.-]*(?:\s+[A-ZÀ-Ú][\wÀ-ú'&.-]*){{0,3}})"
+
+
 def extrair_nome(texto: str) -> str | None:
+    m = re.search(_NOME_COM_TIPO, texto)
+    if m:
+        return re.sub(r"[.,;:!?\"”]+$", "", m.group(1)).strip()
     for pad in _PADROES_NOME:
         m = re.search(pad, texto)
         if m:
@@ -201,9 +218,13 @@ def interpretar(texto: str, estado: dict | None = None, usar_llm: bool = True) -
     if texto and len(texto.split()) > 6:
         b["direcao"] = (b.get("direcao", "") + " " + texto).strip()[-1200:]
 
-    perfis = carregar_perfis()
-    if b.get("perfil_id") not in perfis:
+    if b.get("perfil_id") not in carregar_perfis_todos():
         b.pop("perfil_id", None)
+    if _vazio(b.get("perfil_id")) and texto and (ultima == "perfil_id" or est["rodada"] >= 1):
+        # ramo fora do catálogo: segue com o perfil "geral" em vez de perguntar para sempre; o ramo fica como a pessoa disse
+        if ultima == "perfil_id" and len(texto.split()) <= 8:
+            b["ramo_livre"] = re.sub(r"^(?:eu\s+)?(?:sou|trabalho com|tenho\s+(?:uma|um)|é|e)\s+", "", texto, flags=re.I).strip(" .!")
+        b["perfil_id"] = "geral"
     essenciais = ["perfil_id", "negocio"] + (["oferta"] if est["rodada"] == 0 and not b.get("roteiro") else [])
     faltando = [c for c in essenciais if _vazio(b.get(c))]
     if PULAR.search(_norm(texto)) or est["rodada"] >= 2:  # nunca prender a pessoa: depois de 2 perguntas segue com o que há (ramo continua obrigatório)
@@ -218,7 +239,7 @@ def interpretar(texto: str, estado: dict | None = None, usar_llm: bool = True) -
 def _montar_pergunta(faltando: list[str], b: dict) -> str | None:
     if not faltando:
         return None
-    ps = {"perfil_id": "Qual é o seu ramo? Por exemplo: salão, confeitaria, loja de roupas, oficina, aulas particulares ou pet.",
+    ps = {"perfil_id": "Qual é o seu ramo? Pode falar do seu jeito: padaria, salão, confeitaria, loja, oficina, aulas, pet… qualquer negócio serve.",
           "negocio": "Qual é o nome do seu negócio?",
           "oferta": "O que você quer divulgar nesse vídeo? Pode ser um produto, um serviço ou uma promoção, e se tiver preço, me conta."}
     if len(faltando) == 1:
@@ -228,10 +249,9 @@ def _montar_pergunta(faltando: list[str], b: dict) -> str | None:
 
 
 def _entendi(b: dict) -> list[str]:
-    perfis = carregar_perfis()
     out = []
     if b.get("perfil_id"):
-        out.append(f"Ramo: {perfis[b['perfil_id']]['nome']}")
+        out.append(f"Ramo: {b.get('ramo_livre') or obter_perfil(b['perfil_id'])['nome']}")
     for k, r in (("negocio", "Negócio"), ("oferta", "Divulgar"), ("preco", "Preço"), ("tom", "Tom"), ("cta_canal", "Contato")):
         if b.get(k):
             out.append(f"{r}: {b[k]}")
@@ -244,8 +264,13 @@ def _entendi(b: dict) -> list[str]:
 
 def aplicar_briefing(b: dict) -> dict:
     """Briefing → (perfil_id, negocio, formato_id, instrucoes, perfil_override, roteiro) para o grafo."""
-    p = carregar_perfis()[b["perfil_id"]]
+    p = obter_perfil(b["perfil_id"])
     over: dict[str, Any] = {}
+    generico = b["perfil_id"] in {"geral"} or b["perfil_id"].endswith("_geral")  # texto neutro: a fala da pessoa manda
+    if generico and b.get("oferta"):
+        over["gancho"] = " ".join(str(b["oferta"]).split()[:5])
+    if b.get("ramo_livre"):
+        over["nome"] = str(b["ramo_livre"])[:60]
     if b.get("cta_canal"):
         over["cta_canal"] = b["cta_canal"]
     curto = lambda t, n=6: " ".join(str(t).split()[:n])  # noqa: E731
@@ -264,13 +289,15 @@ def aplicar_briefing(b: dict) -> dict:
         partes.append(f"Diferencial: {b['diferencial']}")
     if b.get("tom"):
         partes.append(f"Tom: {b['tom']}")
+    if b.get("ramo_livre"):
+        partes.append(f"Ramo do negócio (como a pessoa disse): {b['ramo_livre']}")
     if b.get("direcao"):
         partes.append(f"Pedido original da pessoa (siga a direção): {b['direcao']}")
     return {"perfil_id": b["perfil_id"], "negocio": b.get("negocio"), "formato_id": b.get("formato_id"),
             "instrucoes": ". ".join(partes) or None, "perfil_override": over, "roteiro_usuario": b.get("roteiro")}
 
 
-def gerar_pedido(b: dict, com_voz: bool = True, pedido_id: str | None = None) -> dict:
+def gerar_pedido(b: dict, com_voz: bool = False, pedido_id: str | None = None) -> dict:
     """Roda o grafo com o briefing e grava em output/pedidos/<pedido_id>.*  Retorna {pedido_id, saida, trace}."""
     from src.criativos.grafo import executar
     if _vazio(b.get("perfil_id")):

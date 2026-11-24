@@ -24,7 +24,7 @@ def _auditar(video: Path, formato_id: int) -> dict:
     return {"passou": r["passed"], "reprovados": [c for c in r["checks"] if not c["ok"]]}
 
 
-def renderizar_spec(spec: CriativoSpec, pasta: Path | None = None, com_voz: bool = True, auditar: bool = True,
+def renderizar_spec(spec: CriativoSpec, pasta: Path | None = None, com_voz: bool = False, auditar: bool = True,
                     nome_base: str | None = None) -> dict:
     pasta = Path(pasta or SAIDA_PADRAO)
     pasta.mkdir(parents=True, exist_ok=True)
@@ -38,14 +38,14 @@ def renderizar_spec(spec: CriativoSpec, pasta: Path | None = None, com_voz: bool
 
 
 def gerar_criativo(perfil_id: str, pasta: Path | None = None, negocio: str | None = None,
-                   formato_id: int | None = None, instrucoes: str | None = None, com_voz: bool = True) -> dict:
+                   formato_id: int | None = None, instrucoes: str | None = None, com_voz: bool = False) -> dict:
     """Roda o grafo LangGraph (perfil→formato→referências→roteiro→validação→render) e devolve saída + raciocínio."""
     from src.criativos.grafo import executar
     r = executar(perfil_id, negocio, formato_id, instrucoes, pasta, com_voz)
     return {**r["saida"], "trace": r["trace"], "referencias": r["referencias"]}
 
 
-def gerar_lote(perfis: list[str] | None = None, pasta: Path | None = None, com_voz: bool = True) -> list[dict]:
+def gerar_lote(perfis: list[str] | None = None, pasta: Path | None = None, com_voz: bool = False) -> list[dict]:
     resultados = []
     for pid in perfis or list(carregar_perfis()):
         try:
@@ -55,6 +55,6 @@ def gerar_lote(perfis: list[str] | None = None, pasta: Path | None = None, com_v
     return resultados
 
 
-def renderizar_json(spec_json: str | dict, pasta: Path | None = None, com_voz: bool = True) -> dict:
+def renderizar_json(spec_json: str | dict, pasta: Path | None = None, com_voz: bool = False) -> dict:
     dados = json.loads(spec_json) if isinstance(spec_json, str) else spec_json
     return renderizar_spec(CriativoSpec(**dados), pasta, com_voz)

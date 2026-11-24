@@ -66,25 +66,43 @@ def wrap(draw: ImageDraw.ImageDraw, text: str, font, max_w: int) -> list[str]:
 
 
 class Fundo:
-    """Gradiente vertical pré-calculado + bolhas flutuantes (barato por frame)."""
+    """Fundo animado sem "bolhas": gradiente que desliza + estilo por perfil (listras, varredura de luz ou painéis).
+    Calculado em 1/4 da resolução e ampliado (suave por natureza e ~20x mais barato por quadro)."""
+
+    Q = 4
 
     def __init__(self, spec: CriativoSpec):
-        a, b = np.array(_hex(spec.paleta.fundo1), float), np.array(_hex(spec.paleta.fundo2), float)
-        t = np.linspace(0, 1, H)[:, None, None]
-        grad = (a * (1 - t) + b * t) * np.ones((1, W, 1))
-        self.base = Image.fromarray(grad.astype(np.uint8), "RGB").convert("RGBA")
-        self.cor1, self.cor2 = _hex(spec.paleta.acento), _hex(spec.paleta.destaque)
+        q = self.Q
+        w, h = W // q, H // q
+        a, b = np.array(_hex(spec.paleta.fundo1), np.float32), np.array(_hex(spec.paleta.fundo2), np.float32)
+        t = np.linspace(0, 1, h * 2, dtype=np.float32)[:, None, None]
+        self.base = (a * (1 - t) + b * t) * np.ones((1, w, 1), np.float32)  # 2h de altura: rola vertical sem emenda
+        self.c1, self.c2 = np.array(_hex(spec.paleta.acento), np.float32), np.array(_hex(spec.paleta.destaque), np.float32)
+        self.estilo = sum(map(ord, spec.perfil_id or "x")) % 3
+        yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+        self.xx, self.yy, self.w, self.h = xx * q, yy * q, w, h
+        v = np.sqrt(((self.xx - W / 2) / (W / 2)) ** 2 + ((self.yy - H / 2) / (H / 2)) ** 2)
+        self.vinheta = (1 - .28 * np.clip(v - .35, 0, 1) ** 1.5)[..., None].astype(np.float32)
 
     def frame(self, t: float) -> Image.Image:
-        small = Image.new("RGBA", (W // 4, H // 4), (0, 0, 0, 0))
-        d = ImageDraw.Draw(small)
-        for i, (cor, raio, fx, fy, ph) in enumerate([(self.cor1, 150, .21, .13, 0), (self.cor2, 110, .17, .19, 2),
-                                                     (self.cor1, 80, .27, .11, 4), (self.cor2, 190, .09, .15, 1)]):
-            cx = (W / 8) * (1 + .8 * math.sin(t * fx * 6.28 + ph + i))
-            cy = (H / 8) * (1 + .85 * math.cos(t * fy * 6.28 + ph * 1.3))
-            d.ellipse([cx - raio / 4, cy - raio / 4, cx + raio / 4, cy + raio / 4], fill=(*cor, 30))
-        small = small.filter(ImageFilter.GaussianBlur(5))
-        return Image.alpha_composite(self.base, small.resize((W, H), Image.BILINEAR))
+        h = self.h
+        off = int((h * .5) * (.5 + .5 * math.sin(t * .35)))
+        img = self.base[off:off + h].copy()
+        xx, yy = self.xx, self.yy
+        if self.estilo == 0:  # listras diagonais que correm
+            m = (((xx + yy * .6 - t * 110) % 260) < 70).astype(np.float32)[..., None] * .10
+            img = img * (1 - m) + self.c1 * m
+        elif self.estilo == 1:  # feixe de luz varrendo a tela
+            pos = (t * 420) % (W + H + 800) - 400
+            m = np.exp(-(((xx * .75 + yy * .35) - pos) / 170) ** 2)[..., None] * .22
+            img = img * (1 - m) + self.c1 * m
+        else:  # painéis angulares deslizando
+            m = ((((xx * .5 - yy + (t * 70) % 900)) % 900) < 300).astype(np.float32)[..., None] * .09
+            img = img * (1 - m) + self.c2 * m
+        halo = np.exp(-(((xx - W * (.5 + .35 * math.sin(t * .6))) / 520) ** 2 + ((yy - H * .32) / 620) ** 2))[..., None] * .12
+        img = img * (1 - halo) + self.c2 * halo
+        peq = Image.fromarray(np.clip(img * self.vinheta, 0, 255).astype(np.uint8), "RGB")
+        return peq.resize((W, H), Image.BILINEAR).convert("RGBA")
 
 
 def _texto_centro(d: ImageDraw.ImageDraw, texto: str, y: int, font, cor, max_w: int = 900, gap: int = 14,
@@ -266,11 +284,23 @@ def _quadro_cena(spec: CriativoSpec, fundo: Fundo, c: Cena, t_cena: float, dur: 
     f = _font(36, False)
     d.text((70, 150), spec.negocio.upper(), font=f, fill=(*_hex(spec.paleta.texto), 190))
     CENAS[c.tipo](d, spec, c, t_cena, dur)
-    fade = min(1.0, t_cena / FADE, max(0.0, (dur - t_cena) / FADE))
+    # câmera: entra deslizando com "pop" de zoom, segue com push-in lento e sai com impulso
+    entra = out_cubic(t_cena / 0.38)
+    sai = max(0.0, (t_cena - (dur - 0.22)) / 0.22) ** 2
+    lado = 1 if (hash(c.tipo) + int(dur * 10)) % 2 == 0 else -1
+    zoom = (1 + .06 * (t_cena / max(dur, .1))) * (1 + (1 - entra) * .14) * (1 + sai * .05)
+    dx = lado * ((1 - entra) * W * .22 - sai * W * .18)
+    cx = W / 2
+    camada = camada.transform((W, H), Image.AFFINE, (1 / zoom, 0, cx - (cx + dx) / zoom, 0, 1 / zoom, H / 2 - (H / 2) / zoom),
+                              Image.BILINEAR)
+    fade = min(1.0, t_cena / .16, max(0.0, (dur - t_cena) / .16))
     if fade < 1:
         a = camada.getchannel("A").point(lambda v: int(v * fade))
         camada.putalpha(a)
     quadro = Image.alpha_composite(quadro, camada)
+    if t_cena < .12:  # flash de corte na cor de destaque
+        flash = Image.new("RGBA", (W, H), (*_hex(spec.paleta.destaque), int(70 * (1 - t_cena / .12))))
+        quadro = Image.alpha_composite(quadro, flash)
     d2 = ImageDraw.Draw(quadro, "RGBA")
     d2.rounded_rectangle([70, 100, W - 70, 112], 6, fill=(255, 255, 255, 60))
     d2.rounded_rectangle([70, 100, 70 + (W - 140) * t_global / total, 112], 6, fill=_hex(spec.paleta.destaque))
@@ -320,7 +350,8 @@ async def _vozes(spec: CriativoSpec, pasta: Path) -> list[Path | None]:
     return saidas
 
 
-def _mixar_audio(vozes: list[Path | None], duracoes: list[float], trilha: Path, saida: Path) -> None:
+def _mixar_audio(vozes: list[Path | None], duracoes: list[float], trilha: Path, saida: Path,
+                 sfx: Path | None = None) -> None:
     total = sum(duracoes)
     cmd: list[str] = [_bin("ffmpeg"), "-hide_banner", "-nostats", "-y"]
     partes, rotulos, n = [], [], 0
@@ -334,12 +365,19 @@ def _mixar_audio(vozes: list[Path | None], duracoes: list[float], trilha: Path, 
             n += 1
         inicio += dur
     cmd += ["-i", str(trilha)]
+    if sfx:
+        cmd += ["-i", str(sfx)]
     if rotulos:
         partes.append("".join(rotulos) + f"amix=inputs={len(rotulos)}:normalize=0:duration=longest[voz]")
         partes.append(f"[{n}:a]volume=0.16,atrim=0:{total:.3f}[bg]")
-        partes.append("[voz][bg]amix=inputs=2:normalize=0:duration=longest[mix]")
+        partes.append("[voz][bg]amix=inputs=2:normalize=0:duration=longest[mix0]")
     else:
-        partes.append(f"[{n}:a]volume=0.5,atrim=0:{total:.3f}[mix]")
+        partes.append(f"[{n}:a]volume=0.5,atrim=0:{total:.3f}[mix0]")
+    if sfx:  # efeitos por cima de voz+trilha; o loudnorm abaixo acerta o conjunto
+        partes.append(f"[{n + 1}:a]aresample=44100,volume=0.45,apad=whole_dur={total:.3f},atrim=0:{total:.3f}[fx]")
+        partes.append("[mix0][fx]amix=inputs=2:normalize=0:duration=longest[mix]")
+    else:
+        partes.append("[mix0]anull[mix]")
     partes.append("[mix]loudnorm=I=-16:TP=-1.5:LRA=11,aresample=48000,"
                   f"afade=t=out:st={max(total - .5, 0):.2f}:d=0.5[out]")
     cmd += ["-filter_complex", ";".join(partes), "-map", "[out]", "-ac", "2", str(saida)]
@@ -349,7 +387,8 @@ def _mixar_audio(vozes: list[Path | None], duracoes: list[float], trilha: Path, 
 
 
 # ----------------------------------------------------------------------------- render
-def renderizar_criativo(spec: CriativoSpec, saida: Path, com_voz: bool = True, progresso=None) -> dict:
+def renderizar_criativo(spec: CriativoSpec, saida: Path, com_voz: bool = True, progresso=None,
+                        com_sfx: bool = True) -> dict:
     saida = Path(saida)
     saida.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="criativo_") as tmp:
@@ -369,7 +408,11 @@ def renderizar_criativo(spec: CriativoSpec, saida: Path, com_voz: bool = True, p
         trilha = tmp / "trilha.wav"
         _trilha_procedural(trilha, total + 1)
         audio = tmp / "audio.m4a.wav"
-        _mixar_audio(vozes, duracoes, trilha, audio)
+        info_sfx = None
+        if com_sfx:
+            from src.editing.sfx import gerar_trilha_sfx
+            info_sfx = gerar_trilha_sfx(spec.cenas, duracoes, tmp / "sfx.wav")
+        _mixar_audio(vozes, duracoes, trilha, audio, Path(info_sfx["arquivo"]) if info_sfx else None)
 
         cmd = [_bin("ffmpeg"), "-hide_banner", "-nostats", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24",
                "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-", "-i", str(audio),
@@ -395,5 +438,8 @@ def renderizar_criativo(spec: CriativoSpec, saida: Path, com_voz: bool = True, p
         except BrokenPipeError:
             raise RuntimeError(f"ffmpeg encerrou antes: {proc.stderr.read().decode(errors='replace')[-1500:]}")  # type: ignore[union-attr]
     return {"output": str(saida), "duracao_s": round(total, 2), "cenas": len(spec.cenas),
-            "voz": any(vozes), "perfil_id": spec.perfil_id, "formato_id": spec.formato_id,
+            "voz": any(vozes),
+            "sfx": ({"eventos": info_sfx["eventos"], "tiers": {k: v["tier"] for k, v in info_sfx["efeitos"].items()},
+                     "avisos_licenca": info_sfx["avisos_licenca"]} if info_sfx else None),
+            "perfil_id": spec.perfil_id, "formato_id": spec.formato_id,
             "gerado_por": spec.gerado_por}

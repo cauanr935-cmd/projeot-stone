@@ -281,8 +281,8 @@ def tratar_post(h) -> bool:
         except (ValueError, RuntimeError) as exc:
             h._json(400, {"error": str(exc)})
             return True
-        if not any(a["tipo"] == "video" for a in anexos):
-            h._json(400, {"error": "Anexe pelo menos um vídeo gravado para a edição."})
+        if not str(d.get("texto", "")).strip() and not anexos:
+            h._json(400, {"error": "Descreva o vídeo ou anexe material."})
             return True
         h._json(202, {"job_id": iniciar_edicao(str(d.get("texto", "")), anexos)})
         return True

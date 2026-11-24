@@ -53,10 +53,10 @@ def _passo(no: str, titulo: str, resumo: str, **detalhes: Any) -> list[dict]:
 def n_perfil(s: Estado) -> dict:
     p = obter_perfil(s["perfil_id"])
     cnae = load_cnae_profiles()
-    seg = next((v["segment"] for k, v in cnae["profiles"].items() if k == p["cnae"]), "")
+    seg = p.get("segmento") or next((v["segment"] for k, v in cnae["profiles"].items() if k == p["cnae"]), "")
     p = {**p, **(s.get("perfil_override") or {}), "negocio": s.get("negocio") or p["negocio"]}
     return {"perfil": p, "segmento": seg, "tentativas": 0,
-            "trace": _passo("perfil", "Entendi o negócio", f"{p['nome']} (CNAE {p['cnae']}), dor central: {p['dor'].lower()}.",
+            "trace": _passo("perfil", "Entendi o negócio", f"{p['nome']}{' (CNAE ' + p['cnae'] + ')' if p.get('cnae') else ''}, dor central: {p['dor'].lower()}.",
                             cnae=p["cnae"], segmento=seg, dor=p["dor"], solucao=p["solucao"], cta=p["cta"])}
 
 
