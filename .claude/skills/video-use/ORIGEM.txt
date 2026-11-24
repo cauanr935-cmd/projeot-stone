@@ -1,0 +1,1 @@
+browser-use/video-use @ 43cfc566833548093455c9d4a46bd69913b7e552 (MIT). Auditado: único acesso de rede é helpers/transcribe.py -> ElevenLabs Scribe (exige ELEVENLABS_API_KEY). Subpasta skills/manim-video (motion) não instalada.

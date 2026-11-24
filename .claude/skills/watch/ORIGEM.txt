@@ -1,0 +1,1 @@
+bradautomates/claude-video @ 03ceb42f7fa2c4439aca01752118044baabffb8f (MIT). Instalada SÓ skills/watch; hooks/ (SessionStart) NÃO instalado. Auditado: nuvem opcional (Groq/OpenAI Whisper, Gemini) só com chave; nesta instalação usar frames locais + transcrição local. Requer yt-dlp para URLs.

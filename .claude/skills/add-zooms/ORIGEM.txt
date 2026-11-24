@@ -1,0 +1,1 @@
+louisedesadeleer/add-zooms @ 34db91084a98b791f292bdb895f5f77e14f34243 (MIT). Auditado: só ffmpeg/ffprobe via subprocess, sem rede. install.sh e examples/docs não copiados.
