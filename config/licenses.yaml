@@ -72,6 +72,16 @@ entries:
                            note: "Rejeitar faixas marcadas com Content ID; salvar certificado de licença."}
   procedural-music:       {kind: music_asset, license: "gerado pelo projeto", commercial_ok: true}
   local-cc0:              {kind: music_asset, license: "CC0-1.0", commercial_ok: true}
+  procedural-sfx:         {kind: sfx_asset, license: "gerado pelo projeto (src/editing/sfx.py)", commercial_ok: true}
+  openverse-cc0:          {kind: sfx_asset, license: "CC0/PDM por arquivo (proveniência no .json ao lado)", commercial_ok: review, verify: true,
+                           note: "Quase todo áudio do Openverse é hospedado no Freesound (bloqueado, ADR-005). O arquivo é CC0, mas liberar a origem é decisão jurídica (REELS_ALLOW_FREESOUND_CC0)."}
+
+  pexels-license:         {kind: image_asset, license: "Pexels License (uso comercial, sem atribuição)", commercial_ok: true,
+                           note: "Via API oficial (PEXELS_API_KEY); proveniência no .json ao lado."}
+  myinstants:             {kind: sfx_asset, license: "upload de usuário, sem licença declarada (trechos de TV/jogos/músicas)", commercial_ok: false,
+                           note: "Sons de meme para tempero em edição manual; bloqueado em render comercial automático. Risco de bloqueio de áudio no Instagram."}
+  opengameart-cc0:        {kind: sfx_asset, license: "CC0-1.0 por arquivo (proveniência no .json ao lado; só CC0 puro)", commercial_ok: true,
+                           note: "Baixado de opengameart.org respeitando robots.txt; página e autor ficam no .json."}
 
   # --- Vídeo generativo (opcional) ---
   ltx-video:              {kind: i2v_weights, license: "LTX-Video Open Weights License", commercial_ok: review, verify: true}

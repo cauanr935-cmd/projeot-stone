@@ -35,3 +35,12 @@ _quarentena_para_apagar/
 !src/web/logo.png
 !src/web/tutorial.mp4
 !src/web/tutorial.jpg
+
+# sons de meme baixados (direitos de terceiros): nao versionar
+assets/audio_myinstants/
+
+# pacotes baixados por pip download (artefatos locais)
+*.whl
+
+# efeitos sonoros CC0 baixados sob demanda (python -m src.editing.sfx_web garantir ...)
+assets/audio_cc0/sfx/
