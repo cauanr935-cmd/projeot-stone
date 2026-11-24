@@ -347,16 +347,16 @@ class ReelRequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         from src.criativos import api as criativos_api
-        if self.path.startswith(("/api/criativos", "/api/pedidos")) and criativos_api.tratar_get(self):
+        if self.path.startswith(("/api/criativos", "/api/pedidos", "/api/edicoes", "/api/claude")) and criativos_api.tratar_get(self):
             return
         if self.path.startswith("/api/base"):
             from src.criativos import base_api
             if base_api.tratar_get(self):
                 return
-        if self.path in {"/tutorial.mp4", "/tutorial.jpg", "/logo.png"}:
+        if self.path in {"/tutorial.mp4", "/tutorial.jpg", "/logo.png", "/acessibilidade.js"}:
             arq = WEB_DIR / self.path.lstrip("/")
             if arq.is_file():
-                self._servir_arquivo(arq, {".mp4": "video/mp4", ".png": "image/png"}.get(arq.suffix, "image/jpeg"), arq.name)
+                self._servir_arquivo(arq, {".mp4": "video/mp4", ".png": "image/png", ".js": "text/javascript; charset=utf-8"}.get(arq.suffix, "image/jpeg"), arq.name)
             else:
                 self._json(404, {"error": "Tutorial ainda não gerado (python -m src.criativos.tutorial)."})
             return
@@ -457,7 +457,7 @@ class ReelRequestHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         from src.criativos import api as criativos_api
-        if self.path.startswith(("/api/criativos", "/api/pedido", "/api/voz")) and criativos_api.tratar_post(self):
+        if self.path.startswith(("/api/criativos", "/api/pedido", "/api/voz", "/api/edicao", "/api/claude")) and criativos_api.tratar_post(self):
             return
         if self.path.startswith("/api/uploads?"):
             self._receive_upload()

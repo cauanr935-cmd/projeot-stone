@@ -28,8 +28,15 @@ section.pg{display:none}section.pg.on{display:block;animation:fade .35s}
 .hero p{color:var(--mut);font-size:1.05rem;margin:0 auto;max-width:560px;line-height:1.55}
 .search{margin:30px auto 0;max-width:760px;display:flex;align-items:flex-end;gap:10px;background:#ffffff0c;border:1px solid #ffffff26;border-radius:34px;padding:10px 10px 10px 24px;box-shadow:0 20px 50px -25px #000;transition:.25s}
 .search:focus-within{border-color:var(--g);box-shadow:0 0 0 4px #00d66c22,0 20px 50px -25px #000}
-.search textarea{flex:1;background:none;border:0;outline:0;color:var(--txt);font:inherit;font-size:1.08rem;resize:none;padding:10px 0;max-height:150px;line-height:1.4}
+.search textarea{flex:1;background:none;border:0;outline:0;color:var(--txt);font:inherit;font-size:1.08rem;resize:none;padding:10px 0;max-height:150px;line-height:1.4;overflow-y:auto;scrollbar-width:none}.search textarea::-webkit-scrollbar{display:none}.search textarea::-webkit-resizer{display:none}
 .search textarea::placeholder{color:#7f948a}
+.anx{display:flex;gap:8px;flex-wrap:wrap;max-width:760px;margin:12px auto 0}
+.anx:empty{display:none}
+.fi{display:flex;align-items:center;gap:8px;background:#ffffff0d;border:1px solid var(--line);border-radius:14px;padding:6px 8px 6px 10px;font-size:.82rem;max-width:230px;position:relative;overflow:hidden}
+.fi span.n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fi button{background:none;border:0;color:var(--mut);cursor:pointer;font-size:1rem;line-height:1}
+.fi.err{border-color:var(--err);color:#ffc6c6}.fi i{position:absolute;left:0;bottom:0;height:3px;background:var(--g);transition:width .15s}
+.clip{background:#ffffff14;color:var(--txt)}.clip:hover{background:#ffffff26}
+.search.drag{border-color:var(--g);background:#00d66c14}
 .ib{width:52px;height:52px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;flex:none;transition:.2s}
 .mic{background:linear-gradient(135deg,var(--g),#0a9a4e);color:#04140b;position:relative}
 .mic:hover{transform:scale(1.06)}
@@ -94,7 +101,7 @@ footer{border-top:1px solid var(--line);color:var(--mut);font-size:.82rem;paddin
   <nav>
     <a class="logo" href="/"><img src="/logo.png" alt="Impulso Stone"></a>
     <div class="menu" role="tablist">
-      <a href="#criar" data-pg="criar" class="on">Criar</a><a href="#tutorial" data-pg="tutorial">Tutorial</a><a href="#praticas" data-pg="praticas">Boas práticas</a><a href="/base">Base de referência</a><a href="/galeria">Exemplos</a>
+      <a href="#criar" data-pg="criar" class="on">Criar</a><a href="#tutorial" data-pg="tutorial">Tutorial</a><a href="#praticas" data-pg="praticas">Boas práticas</a><a href="/base">Base de referência</a><a href="/galeria">Exemplos</a><a href="#" id="btnClaude" role="button" aria-haspopup="dialog">Conectar Claude</a>
     </div>
   </nav>
 
@@ -102,12 +109,17 @@ footer{border-top:1px solid var(--line);color:var(--mut);font-size:.82rem;paddin
   <section class="pg on" id="pg-criar">
     <div class="hero">
       <h1>O que você quer <em>criar hoje?</em></h1>
-      <p>Aperte o microfone e fale: qual é o seu negócio e o que quer divulgar. Se faltar algo, eu pergunto. Em cerca de um minuto seu Reel fica pronto.</p>
+      <p>Aperte o microfone e fale: qual é o seu negócio e o que quer divulgar. Tem vídeos, fotos ou músicas? Anexe com o clipe, quantos quiser. Se faltar algo, eu pergunto. Em cerca de um minuto seu Reel fica pronto.</p>
       <div class="search" id="search">
         <textarea id="txt" rows="1" aria-label="Descreva o vídeo que você quer" placeholder="Ex.: Tenho uma confeitaria chamada Doce Sonho e quero divulgar meu bolo de pote por R$ 12…"></textarea>
-        <button class="ib send" id="send" aria-label="Enviar" title="Enviar (Enter)" disabled><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5v-6.9l9-1.6-9-1.6V3.5L22 12z"/></svg></button>
+        <button class="ib clip" id="clip" aria-label="Anexar vídeos, fotos ou áudios" title="Anexar vídeos, fotos ou áudios"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.6-8.6a3.7 3.7 0 0 1 5.2 5.2l-8.6 8.6a1.8 1.8 0 0 1-2.6-2.6l7.9-7.9"/></svg></button>
+        <input type="file" id="arq" multiple hidden accept="video/*,image/*,audio/*,.mkv,.mov">
         <button class="ib mic" id="mic" aria-label="Falar" title="Falar"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15a4 4 0 0 0 4-4V6a4 4 0 0 0-8 0v5a4 4 0 0 0 4 4zm6-4a6 6 0 0 1-12 0H4a8 8 0 0 0 7 7.9V22h2v-3.1A8 8 0 0 0 20 11z"/></svg></button>
+        <button class="ib send" id="send" aria-label="Enviar" title="Enviar (Enter)" disabled><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5v-6.9l9-1.6-9-1.6V3.5L22 12z"/></svg></button>
       </div>
+      <div class="anx" id="anx"></div>
+      <label class="modo" id="lblChat" hidden style="display:flex;gap:8px;align-items:center;justify-content:center;margin-top:10px;color:var(--mut);font-size:.9rem;cursor:pointer"><input type="checkbox" id="modoChat"> Conversar com o Claude sobre meus projetos e criativos</label>
+      <label class="modo" style="display:flex;gap:8px;align-items:center;justify-content:center;margin-top:10px;color:var(--mut);font-size:.9rem;cursor:pointer"><input type="checkbox" id="modoEdicao"> Editar meu vídeo gravado (sessão do Claude) — corta, legenda, mixa o áudio e cria a capa</label>
       <div class="status" id="status" role="status" aria-live="polite"></div>
       <div class="chips" id="exemplos"></div>
       <button class="tutlink" onclick="ir('tutorial')">▶ Como funciona (vídeo de 1 minuto)</button>
@@ -139,13 +151,14 @@ footer{border-top:1px solid var(--line);color:var(--mut);font-size:.82rem;paddin
       <div class="card"><span class="ok">Preço e promessa</span><h3>Só o que é verdade</h3><p>Use preços, prazos e garantias reais. O vídeo repete o que você disser.</p></div>
       <div class="card"><span class="ok">Tom</span><h3>Diga como quer o vídeo</h3><p>“Divertido”, “direto”, “emocional” ou “profissional”. Se não disser, uso o tom do seu ramo.</p></div>
       <div class="card"><span class="ok">Roteiro próprio</span><h3>Já escreveu? Fale “roteiro:”</h3><p>Diga a palavra “roteiro” e leia o texto, com pelo menos 3 frases. A primeira vira o gancho; a última, o convite para o contato.</p></div>
+      <div class="card"><span class="ok">Seus arquivos</span><h3>Anexe vídeos, fotos e músicas</h3><p>Use o clipe (ou arraste para a caixa) e envie quantos quiser. Vídeos e fotos viram as cenas; o primeiro áudio vira a trilha. Sem anexos, eu crio o vídeo só com texto animado.</p></div>
       <div class="card"><span class="ok">Um vídeo por vez</span><h3>Ajuste em vez de recomeçar</h3><p>Depois do Reel pronto, use “Ajustar” para pedir mudanças sem repetir tudo.</p></div>
       <div class="card"><span class="ok">Privacidade</span><h3>Seu áudio fica na máquina</h3><p>A transcrição roda localmente e o áudio é apagado em seguida.</p></div>
       <div class="card"><span class="ok">Antes de publicar</span><h3>Revise o texto na tela</h3><p>Confira nome, preço e contato antes de postar no Instagram.</p></div>
     </div>
   </section>
 
-  <footer>Voz e vídeo gerados localmente (Pillow + ffmpeg, Kokoro e Whisper), sem custo por vídeo. Prefere usar com sua própria mídia? <a href="/editor">Editor com vídeos próprios →</a> · Pelo Claude: <a href="/base">veja a base de referência</a>; o MCP está no README.</footer>
+  <footer>Voz e vídeo gerados localmente (Pillow + ffmpeg, Kokoro e Whisper), sem custo por vídeo. Pelo Claude: <a href="/base">veja a base de referência</a>; o MCP está no README.</footer>
 </div>
 
 <script>
@@ -155,7 +168,7 @@ const EXEMPLOS=["Tenho um salão chamado Studio Luz e quero divulgar escova prog
  "Sou eletricista, minha empresa é a Eletro Seguro, atendo no mesmo dia",
  "Quero um vídeo divertido das minhas marmitas, Sabor Caseiro, a R$ 18 no WhatsApp",
  "Dou aula particular de matemática e quero encher minhas turmas"];
-let estado=null, ocupado=false, falaAtiva=true, voltarAOuvir=false, gravacao=null, jobAtual=null;
+let anexos=[], estado=null, ocupado=false, falaAtiva=true, voltarAOuvir=false, gravacao=null, jobAtual=null;
 
 /* ---------- navegação ---------- */
 function ir(pg){location.hash=pg}
@@ -177,11 +190,37 @@ function falar(texto,fim){
 
 /* ---------- caixa de texto ---------- */
 const txt=$("#txt");
-txt.addEventListener("input",()=>{txt.style.height="auto";txt.style.height=Math.min(txt.scrollHeight,150)+"px";$("#send").disabled=!txt.value.trim()||ocupado});
+txt.addEventListener("input",()=>{txt.style.height="auto";txt.style.height=Math.min(txt.scrollHeight,150)+"px";desenharAnexos()});
 txt.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();enviar()}});
 $("#send").onclick=()=>enviar();
 $("#exemplos").innerHTML=EXEMPLOS.map(e=>`<button class="ex">${esc(e)}</button>`).join("");
 document.querySelectorAll(".ex").forEach(b=>b.onclick=()=>{txt.value=b.textContent;txt.dispatchEvent(new Event("input"));txt.focus()});
+
+/* ---------- anexos (vídeos, fotos, áudios; quantos quiser) ---------- */
+const EXT={video:/\.(mp4|mov|m4v|webm|mkv)$/i,imagem:/\.(jpe?g|png|webp)$/i,audio:/\.(mp3|wav|m4a|aac|ogg|flac)$/i};
+const tipoDe=n=>Object.keys(EXT).find(k=>EXT[k].test(n));
+const ICONE={video:"🎬",imagem:"🖼️",audio:"🎵"};
+function desenharAnexos(){$("#anx").innerHTML=anexos.map((a,i)=>`<div class="fi ${a.erro?"err":""}" title="${esc(a.erro||a.nome)}"><span>${ICONE[a.tipo]||"📄"}</span><span class="n">${esc(a.nome)}</span>${a.erro?"":a.id?"":`<small>${a.pct||0}%</small>`}<button aria-label="Remover ${esc(a.nome)}" onclick="tirar(${i})">×</button>${a.id||a.erro?"":`<i style="width:${a.pct||0}%"></i>`}</div>`).join("");
+  $("#send").disabled=ocupado||anexos.some(a=>!a.id&&!a.erro)||(!txt.value.trim()&&!anexos.some(a=>a.id))}
+function tirar(i){anexos.splice(i,1);desenharAnexos()}
+function enviarArquivo(f){
+  const tipo=tipoDe(f.name),a={nome:f.name,tipo,pct:0};anexos.push(a);
+  if(!tipo){a.erro="Formato não aceito. Use vídeo, foto ou áudio.";desenharAnexos();return}
+  desenharAnexos();
+  const x=new XMLHttpRequest();x.open("POST","/api/pedido/anexo?"+new URLSearchParams({filename:f.name}));
+  x.upload.onprogress=e=>{a.pct=Math.round(100*e.loaded/e.total);desenharAnexos()};
+  x.onload=()=>{let j={};try{j=JSON.parse(x.responseText)}catch(_){}
+    if(x.status===201){a.id=j.anexo_id;a.tipo=j.tipo}else a.erro=j.error||"Falha no envio";desenharAnexos()};
+  x.onerror=()=>{a.erro="Falha de conexão";desenharAnexos()};
+  x.send(f);
+}
+function receber(files){[...files].forEach(enviarArquivo);if(files.length)status("")}
+$("#clip").onclick=()=>$("#arq").click();
+$("#arq").onchange=e=>{receber(e.target.files);e.target.value=""};
+["dragenter","dragover"].forEach(ev=>$("#search").addEventListener(ev,e=>{e.preventDefault();$("#search").classList.add("drag")}));
+["dragleave","drop"].forEach(ev=>$("#search").addEventListener(ev,e=>{e.preventDefault();$("#search").classList.remove("drag")}));
+$("#search").addEventListener("drop",e=>receber(e.dataTransfer.files));
+addEventListener("paste",e=>{if(e.clipboardData?.files?.length)receber(e.clipboardData.files)});
 
 /* ---------- gravação por voz (para sozinho quando você para de falar) ---------- */
 function melhorMime(){return ["audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus","audio/mp4"].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||""}
@@ -190,7 +229,8 @@ async function iniciarGravacao(){
   if(!navigator.mediaDevices||!window.MediaRecorder){status("Seu navegador não grava áudio. Digite o pedido na caixa.");return}
   let stream;
   const tentar=async c=>{try{return await navigator.mediaDevices.getUserMedia(c)}catch(e){return e}};
-  let r=await tentar({audio:{echoCancellation:true,noiseSuppression:true}});
+  // sem supressão de ruído/eco: em microfones embutidos baixos ela apaga a fala; o ganho automático ajuda a transcrição
+  let r=await tentar({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true}});
   if(r instanceof Error&&r.name!=="NotAllowedError"&&r.name!=="SecurityError"){
     // o microfone padrão pode ser um fone Bluetooth ocupado: tenta sem filtros e depois cada entrada, a embutida primeiro
     r=await tentar({audio:true});
@@ -217,7 +257,7 @@ async function iniciarGravacao(){
     $("#mic").classList.remove("rec");const blob=new Blob(parts,{type:mr.mimeType||"audio/webm"});
     if(blob.size<1500||performance.now()-t0<1200){status("A gravação ficou muito curta. Aperte o microfone e fale de novo.");return}
     // mesmo sem detectar volume aqui, deixa o Whisper decidir (o medidor pode falhar em alguns navegadores)
-    await transcrever(blob)};
+    await transcrever(blob,{mic:stream.getAudioTracks()[0]?.label||"desconhecido",db:Math.round(20*Math.log10(Math.max(pico,1e-5)))})};
   mr.start(250);$("#mic").classList.add("rec");
   const barras=`<span class="bars">${"<i></i>".repeat(5)}</span>`;
   const msg=()=>status(`${barras} Estou ouvindo… fale com calma. <small style="color:var(--mut)">(clique no microfone para terminar)</small>`);msg();
@@ -233,11 +273,13 @@ async function iniciarGravacao(){
 }
 $("#mic").onclick=()=>{ if(gravacao){gravacao.parar()} else {voltarAOuvir=true;iniciarGravacao()} };
 
-async function transcrever(blob){
+async function transcrever(blob,diag){
   ocupado=true;$("#mic").classList.add("busy");status('<span class="spin"></span> Transcrevendo o que você disse…');
   try{const r=await fetch("/api/voz/transcrever",{method:"POST",headers:{"Content-Type":blob.type},body:blob});
     const j=await r.json();if(!r.ok)throw new Error(j.error||"Falha na transcrição");
-    if(!j.texto){status("Não consegui entender o áudio. Tente de novo, um pouco mais perto do microfone.");return}
+    if(!j.texto){
+      const d=diag?` <small style="color:var(--mut)">Microfone usado pelo navegador: <b>${esc(diag.mic)}</b> · nível captado: <b>${diag.db} dB</b>${diag.db<-45?" (quase silêncio: este não parece ser o microfone certo — clique no cadeado ao lado do endereço e escolha outro)":""}.</small>`:"";
+      status("Não consegui entender o áudio. Tente de novo, um pouco mais perto do microfone."+d);return}
     ocupado=false;await enviar(j.texto)}
   catch(e){status("");bolha("a",`<div class="note err">${esc(e.message)}. Você pode digitar o pedido na caixa.</div>`)}
   finally{ocupado=false;$("#mic").classList.remove("busy")}
@@ -245,9 +287,11 @@ async function transcrever(blob){
 
 /* ---------- conversa ---------- */
 async function enviar(texto){
-  texto=(texto??txt.value).trim();if(!texto||ocupado)return;
+  texto=(texto??txt.value).trim();const nA=anexos.filter(a=>a.id).length;if((!texto&&!nA)||ocupado||anexos.some(a=>!a.id&&!a.erro))return;
   txt.value="";txt.dispatchEvent(new Event("input"));$("#out").innerHTML="";
-  bolha("u",`<span class="tag">Você</span>${esc(texto)}`);
+  bolha("u",`<span class="tag">Você</span>${esc(texto)}${nA?`<div class="entendi">${anexos.filter(a=>a.id).map(a=>`<span>${ICONE[a.tipo]} ${esc(a.nome)}</span>`).join("")}</div>`:""}`);
+  if($("#modoChat").checked&&claude.conectado&&!nA){return conversarClaude(texto)}
+  if($("#modoEdicao").checked){return editar(texto)}
   ocupado=true;status('<span class="spin"></span> Entendendo seu pedido…');
   try{
     const r=await api("/api/pedido/interpretar",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({texto,estado})});
@@ -261,14 +305,60 @@ async function enviar(texto){
   }catch(e){ocupado=false;status("");bolha("a",`<div class="note err">${esc(e.message)}</div>`)}
 }
 
+
+/* ---------- Conectar Claude ---------- */
+let claude={conectado:false};
+async function claudeEstado(){try{claude=await api("/api/claude/estado")}catch(_){}
+  $("#lblChat").hidden=!claude.conectado;$("#btnClaude").textContent=claude.conectado?"Claude conectado ✓":"Conectar Claude";
+  if(!claude.conectado)$("#modoChat").checked=false}
+function abrirClaude(token){
+  const d=$("#dlgClaude");$("#dlgTxt").textContent=claude.texto||"";$("#dlgErr").hidden=true;
+  $("#dlgEscopos").innerHTML=Object.entries(claude.escopos_disponiveis||{}).map(([k,v])=>`<label style="display:flex;gap:8px;align-items:center;padding:4px 0"><input type="checkbox" value="${esc(k)}" ${(!claude.conectado||claude.escopos.includes(k))?"checked":""} ${claude.conectado?"disabled":""}> ${esc(v)}</label>`).join("");
+  $("#dlgOk").textContent=claude.conectado?"Conectado":"Aceitar e conectar";$("#dlgOk").disabled=!!claude.conectado;$("#dlgDes").hidden=!claude.conectado;
+  $("#dlgUsar").hidden=!token;if(token)$("#dlgCmd").textContent=`claude mcp add --transport http impulso-plataforma https://SEU-HOST/mcp --header "Authorization: Bearer ${token}"`;
+  d.showModal()}
+$("#btnClaude").onclick=e=>{e.preventDefault();abrirClaude()};
+$("#dlgFechar").onclick=()=>$("#dlgClaude").close();
+$("#dlgOk").onclick=async()=>{try{const esc_=[...document.querySelectorAll("#dlgEscopos input:checked")].map(i=>i.value);
+  const r=await api("/api/claude/conectar",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({escopos:esc_})});
+  claude=r;await claudeEstado();abrirClaude(r.token_mcp)}catch(e){$("#dlgErr").textContent=e.message;$("#dlgErr").hidden=false}};
+$("#dlgDes").onclick=async()=>{try{await api("/api/claude/desconectar",{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"});await claudeEstado();$("#dlgClaude").close()}catch(e){$("#dlgErr").textContent=e.message;$("#dlgErr").hidden=false}};
+async function conversarClaude(texto){
+  ocupado=true;const b=bolha("a",'<span class="tag">Claude</span><span class="resp"></span>');const alvo=b.querySelector(".resp");
+  status('<span class="spin"></span> Claude está pensando…');
+  try{const r=await fetch("/api/claude/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({texto})});
+    if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.error||"Erro "+r.status)}
+    const rd=r.body.getReader(),dec=new TextDecoder();let buf="";
+    for(;;){const {done,value}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});
+      let i;while((i=buf.indexOf("\n\n"))>=0){const l=buf.slice(0,i).replace(/^data: /,"");buf=buf.slice(i+2);
+        try{const o=JSON.parse(l);if(o.t){alvo.textContent+=o.t;status("")}if(o.erro)throw new Error(o.erro)}catch(e){if(e.message&&!(e instanceof SyntaxError))throw e}}}
+  }catch(e){alvo.innerHTML=`<span class="note err">${esc(e.message)}</span>`}
+  status("");ocupado=false;txt.dispatchEvent(new Event("input"))}
+claudeEstado();
+
+async function editar(texto){
+  ocupado=true;$("#send").disabled=true;const t0=Date.now();let real=null;
+  const tick=()=>status(`<span class="spin"></span> ${esc(real?.progress||"Abrindo uma sessão do Claude…")}${real?.percent?` (${Math.round(real.percent)}%)`:""} · ${Math.round((Date.now()-t0)/1000)}s`);
+  tick();const iv=setInterval(tick,1000);
+  try{
+    const {job_id}=await api("/api/edicao/iniciar",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({texto,anexos:anexos.filter(a=>a.id).map(a=>a.id)})});
+    let j;while(true){await new Promise(r=>setTimeout(r,2000));j=await api(`/api/criativos/jobs/${job_id}`);real=j;if(j.status!=="running")break}
+    if(j.status==="error")throw new Error(j.error);
+    clearInterval(iv);status("");const base=`/api/edicoes/${j.pedido_id}`;
+    $("#out").innerHTML=`<div class="result"><div class="phone"><div class="scr"><video src="${j.video}" controls autoplay loop playsinline></video></div></div><div><h2>Vídeo editado 🎬</h2><p style="color:var(--mut);white-space:pre-line">${esc(j.resumo||"")}</p><div class="act"><a class="btn" href="${j.video}" download="reel-${esc(j.pedido_id)}.mp4">Baixar MP4</a>${j.arquivos.includes("capa.jpg")?`<a class="btn sec" href="${base}/capa.jpg" download>Baixar capa</a>`:""}${j.arquivos.includes("decupagem.md")?`<a class="btn sec" target="_blank" href="${base}/decupagem.md">Decupagem</a>`:""}${j.arquivos.includes("creditos_audio.md")?`<a class="btn sec" target="_blank" href="${base}/creditos_audio.md">Créditos de áudio</a>`:""}</div></div></div>`;
+    falar("Seu vídeo editado está pronto!")
+  }catch(e){clearInterval(iv);status("");bolha("a",`<div class="note err">Não consegui editar: ${esc(e.message)}</div>`)}
+  ocupado=false;txt.dispatchEvent(new Event("input"));
+}
+
 async function gerar(briefing){
   ocupado=true;$("#send").disabled=true;const t0=Date.now();
   const etapas=["Entendendo o negócio","Escolhendo o formato certo","Estudando Reels de referência","Escrevendo o roteiro","Gravando a voz","Montando as cenas e a trilha"];
-  const tick=()=>status(`<span class="spin"></span> ${etapas[Math.min(etapas.length-1,Math.floor((Date.now()-t0)/9000))]}… ${Math.round((Date.now()-t0)/1000)}s`);
+  let real=null;const tick=()=>status(`<span class="spin"></span> ${real?.progress||etapas[Math.min(etapas.length-1,Math.floor((Date.now()-t0)/9000))]}${real?.percent?` (${Math.round(real.percent)}%)`:""}… ${Math.round((Date.now()-t0)/1000)}s`);
   tick();const iv=setInterval(tick,1000);
   try{
-    const {job_id}=await api("/api/pedido/gerar",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({briefing})});
-    let j;while(true){await new Promise(r=>setTimeout(r,2000));j=await api(`/api/criativos/jobs/${job_id}`);if(j.status!=="running")break}
+    const {job_id}=await api("/api/pedido/gerar",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({briefing,anexos:anexos.filter(a=>a.id).map(a=>a.id)})});
+    let j;while(true){await new Promise(r=>setTimeout(r,2000));j=await api(`/api/criativos/jobs/${job_id}`);real=j;if(j.status!=="running")break}
     if(j.status==="error")throw new Error(j.error);
     clearInterval(iv);status("");resultado(j,briefing);falar("Seu Reel está pronto!")
   }catch(e){clearInterval(iv);status("");bolha("a",`<div class="note err">Não consegui gerar: ${esc(e.message)}</div><div class="act"><button class="btn" onclick="gerar(estado.briefing)">Tentar de novo</button></div>`)}
@@ -287,10 +377,24 @@ function resultado(j,b){
    ${refsHtml(j.trace)}<details style="margin-top:18px"><summary style="cursor:pointer;color:var(--mut)">Por que ficou assim (raciocínio)</summary><div class="trace">${(j.trace||[]).map(t=>`<div><b>${esc(t.titulo)}</b>${esc(t.resumo)}</div>`).join("")}</div></details></div></div>`;
   $("#out").scrollIntoView({behavior:"smooth"});
   $("#ajustar").onclick=()=>{bolha("a",`<span class="tag">Ajustar</span><div class="q">O que você quer mudar? Por exemplo: “mais divertido” ou “troque o preço para R$ 15”.</div>`);voltarAOuvir=true;falar("O que você quer mudar?",()=>iniciarGravacao())};
-  $("#novo").onclick=()=>{estado=null;$("#chat").innerHTML="";$("#out").innerHTML="";window.scrollTo({top:0,behavior:"smooth"});txt.focus()};
+  $("#novo").onclick=()=>{estado=null;anexos=[];desenharAnexos();$("#chat").innerHTML="";$("#out").innerHTML="";window.scrollTo({top:0,behavior:"smooth"});txt.focus()};
 }
 if(!navigator.mediaDevices||!window.MediaRecorder)$("#mic").title="Seu navegador não grava áudio: digite o pedido";
 speechSynthesis&&speechSynthesis.getVoices();
 </script>
+
+<dialog id="dlgClaude" aria-labelledby="dlgT" style="max-width:520px;width:calc(100% - 32px);background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:18px;padding:22px">
+  <h2 id="dlgT" style="margin:0 0 8px">Conectar Claude</h2>
+  <p id="dlgTxt" style="color:var(--mut);line-height:1.5;margin:0 0 12px"></p>
+  <div id="dlgEscopos"></div>
+  <div id="dlgUsar" hidden>
+    <h3 style="margin:16px 0 6px;font-size:1rem">Usar no meu Claude</h3>
+    <p style="color:var(--mut);font-size:.9rem;margin:0 0 8px">No Claude Code, depois de publicar o servidor MCP com URL HTTPS, rode (o token abaixo aparece só agora):</p>
+    <code id="dlgCmd" style="display:block;background:#0006;padding:10px;border-radius:10px;word-break:break-all;font-size:.8rem"></code>
+  </div>
+  <p id="dlgErr" class="note err" hidden></p>
+  <div class="act" style="margin-top:16px"><button class="btn" id="dlgOk"></button><button class="btn sec" id="dlgDes" hidden>Desconectar</button><button class="btn sec" id="dlgFechar">Fechar</button></div>
+</dialog>
+<script src="/acessibilidade.js" defer></script>
 </body>
 </html>

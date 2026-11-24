@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from src.criativos.servico import SAIDA_PADRAO
-from src.criativos.spec import carregar_perfis
+from src.criativos.spec import carregar_perfis, carregar_perfis_todos
 
 JOBS: dict[str, dict[str, Any]] = {}
 LOCK = threading.Lock()
@@ -51,7 +51,7 @@ def _rodar(job_id: str, pid: str, body: dict) -> None:
     from src.criativos.grafo import executar
     try:
         r = executar(pid, body.get("negocio") or None, body.get("formato_id"), body.get("instrucoes") or None,
-                     com_voz=bool(body.get("com_voz", True)))
+                     com_voz=bool(body.get("com_voz", False)))
         with LOCK:
             JOBS[job_id].update(status="done", trace=r["trace"])
     except Exception as exc:
@@ -67,10 +67,22 @@ def iniciar(pid: str, body: dict) -> str:
     return job_id
 
 
-def _rodar_pedido(job_id: str, briefing: dict, com_voz: bool) -> None:
-    from src.criativos import conversa
+def _progresso(job_id: str):
+    def cb(ev: dict) -> None:
+        with LOCK:
+            j = JOBS[job_id]
+            j["percent"] = max(j.get("percent", 0), ev["percent"])
+            j["progress"] = ev["message"]
+    return cb
+
+
+def _rodar_pedido(job_id: str, briefing: dict, com_voz: bool, anexos: list[dict] | None = None) -> None:
+    from src.criativos import conversa, midia_propria
     try:
-        r = conversa.gerar_pedido(briefing, com_voz, pedido_id=job_id[:12])
+        if anexos:
+            r = midia_propria.gerar_com_midia(briefing, anexos, job_id[:12], _progresso(job_id), com_voz)
+        else:
+            r = conversa.gerar_pedido(briefing, com_voz, pedido_id=job_id[:12])
         with LOCK:
             JOBS[job_id].update(status="done", trace=r["trace"], pedido_id=r["pedido_id"],
                                 video=f"/api/pedidos/{r['pedido_id']}/video")
@@ -79,11 +91,33 @@ def _rodar_pedido(job_id: str, briefing: dict, com_voz: bool) -> None:
             JOBS[job_id].update(status="error", error=str(exc)[:400])
 
 
-def iniciar_pedido(briefing: dict, com_voz: bool = True) -> str:
+def iniciar_pedido(briefing: dict, com_voz: bool = False, anexos: list[dict] | None = None) -> str:
     job_id = uuid.uuid4().hex
     with LOCK:
         JOBS[job_id] = {"status": "running", "pedido_id": job_id[:12]}
-    threading.Thread(target=_rodar_pedido, args=(job_id, briefing, com_voz), daemon=True).start()
+    threading.Thread(target=_rodar_pedido, args=(job_id, briefing, com_voz, anexos), daemon=True).start()
+    return job_id
+
+
+def _rodar_edicao(job_id: str, texto: str, anexos: list[dict]) -> None:
+    from src.criativos import sessao_claude
+    def atualizar(**kw):
+        with LOCK:
+            JOBS[job_id].update(kw)
+    try:
+        r = sessao_claude.editar(texto, anexos, job_id[:12], atualizar)
+        with LOCK:
+            JOBS[job_id].update(status="done", percent=100, pedido_id=job_id[:12], **r)
+    except Exception as exc:
+        with LOCK:
+            JOBS[job_id].update(status="error", error=str(exc)[:400])
+
+
+def iniciar_edicao(texto: str, anexos: list[dict]) -> str:
+    job_id = uuid.uuid4().hex
+    with LOCK:
+        JOBS[job_id] = {"status": "running", "pedido_id": job_id[:12], "progress": "Abrindo uma sessão do Claude…"}
+    threading.Thread(target=_rodar_edicao, args=(job_id, texto, anexos), daemon=True).start()
     return job_id
 
 
@@ -100,6 +134,16 @@ def _json_body(h, limite: int = 20000) -> dict:
 
 def tratar_get(h) -> bool:
     """Retorna True se tratou a rota."""
+    if h.path == "/api/claude/estado":
+        from src.claude_conexao import consentimento
+        h._json(200, consentimento.estado())
+        return True
+    if h.path == "/api/claude/historico":
+        if not _so_local(h):
+            return True
+        from src.claude_conexao import chat
+        h._json(200, {"mensagens": chat.historico()[-50:]})
+        return True
     m = re.fullmatch(r"/api/pedidos/([a-f0-9]{12})(/video)?", h.path)
     if m:
         from src.criativos import conversa
@@ -113,6 +157,13 @@ def tratar_get(h) -> bool:
             h._json(200, d)
         else:
             h._json(404, {"error": "Pedido não encontrado."})
+        return True
+    m = re.fullmatch(r"/api/edicoes/([a-f0-9]{12})/(final\.mp4|capa\.jpg|decupagem\.md|creditos_audio\.md|resumo\.md)", h.path)
+    if m:
+        from src.criativos.sessao_claude import SAIDA
+        arq = SAIDA / m.group(1) / m.group(2)
+        tipo = {"mp4": "video/mp4", "jpg": "image/jpeg", "md": "text/markdown; charset=utf-8"}[arq.suffix[1:]]
+        h._servir_arquivo(arq, tipo, m.group(2)) if arq.is_file() else h._json(404, {"error": "Ainda não gerado."})
         return True
     if h.path == "/api/criativos":
         h._json(200, listar())
@@ -147,7 +198,52 @@ def _so_local(h) -> bool:
     return False
 
 
+def _claude_post(h) -> bool:
+    from src.claude_conexao import chat, consentimento
+    if not _so_local(h):
+        return True
+    d = _json_body(h, 20000)
+    if h.path == "/api/claude/conectar":
+        try:
+            h._json(200, consentimento.conectar(d.get("escopos")))
+        except ValueError as exc:
+            h._json(400, {"error": str(exc)})
+    elif h.path == "/api/claude/desconectar":
+        h._json(200, consentimento.desconectar())
+    elif h.path == "/api/claude/chat":
+        try:
+            fluxo = chat.conversar(str(d.get("texto", "")), cancelado=lambda: False)
+            primeiro = next(fluxo, "")
+        except chat.ChatIndisponivel as exc:
+            h._json(409, {"error": str(exc)})
+            return True
+        h.send_response(200)
+        h.send_header("Content-Type", "text/event-stream; charset=utf-8")
+        h.send_header("Cache-Control", "no-store")
+        h.send_header("X-Content-Type-Options", "nosniff")
+        h.end_headers()
+        enviar = lambda o: (h.wfile.write(b"data: " + json.dumps(o, ensure_ascii=False).encode() + b"\n\n"), h.wfile.flush())
+        try:
+            if primeiro:
+                enviar({"t": primeiro})
+            for pedaco in fluxo:
+                enviar({"t": pedaco})
+            enviar({"fim": True})
+        except (BrokenPipeError, ConnectionResetError):
+            fluxo.close()
+        except chat.ChatIndisponivel as exc:
+            try:
+                enviar({"erro": str(exc)})
+            except OSError:
+                pass
+    else:
+        return False
+    return True
+
+
 def tratar_post(h) -> bool:
+    if h.path.startswith("/api/claude/"):
+        return _claude_post(h)
     if h.path == "/api/voz/transcrever":
         if not _so_local(h):
             return True
@@ -163,6 +259,33 @@ def tratar_post(h) -> bool:
         except (ValueError, OSError) as exc:
             h._json(400, {"error": str(exc)})
         return True
+    if h.path.startswith("/api/pedido/anexo?"):
+        if not _so_local(h):
+            return True
+        from urllib.parse import parse_qs, urlparse
+        from src.criativos import midia_propria
+        nome = parse_qs(urlparse(h.path).query).get("filename", [""])[0]
+        try:
+            h._json(201, midia_propria.salvar_anexo(nome, h.rfile, int(h.headers.get("Content-Length", "0"))))
+        except (ValueError, OSError) as exc:
+            h._json(400, {"error": str(exc)})
+        return True
+    if h.path == "/api/edicao/iniciar":
+        if not _so_local(h):
+            return True
+        d = _json_body(h, 60000)
+        from src.criativos import midia_propria, sessao_claude
+        try:
+            anexos = midia_propria.resolver(d.get("anexos") or [])
+            sessao_claude.binario()
+        except (ValueError, RuntimeError) as exc:
+            h._json(400, {"error": str(exc)})
+            return True
+        if not any(a["tipo"] == "video" for a in anexos):
+            h._json(400, {"error": "Anexe pelo menos um vídeo gravado para a edição."})
+            return True
+        h._json(202, {"job_id": iniciar_edicao(str(d.get("texto", "")), anexos)})
+        return True
     if h.path == "/api/pedido/interpretar":
         from src.criativos import conversa
         d = _json_body(h)
@@ -173,10 +296,19 @@ def tratar_post(h) -> bool:
             return True
         d = _json_body(h, 60000)
         b = d.get("briefing") or {}
-        if b.get("perfil_id") not in carregar_perfis():
+        if b.get("perfil_id") not in carregar_perfis_todos():
             h._json(400, {"error": "Falta o ramo do negócio (perfil_id)."})
             return True
-        h._json(202, {"job_id": iniciar_pedido(b, bool(d.get("com_voz", True)))})
+        from src.criativos import midia_propria
+        try:
+            anexos = midia_propria.resolver(d.get("anexos") or [])
+        except ValueError as exc:
+            h._json(400, {"error": str(exc)})
+            return True
+        if anexos and not any(a["tipo"] in {"video", "imagem"} for a in anexos):
+            h._json(400, {"error": "Anexe pelo menos um vídeo ou uma foto (áudio sozinho vira só a trilha)."})
+            return True
+        h._json(202, {"job_id": iniciar_pedido(b, bool(d.get("com_voz", False)), anexos)})
         return True
     m = re.fullmatch(r"/api/criativos/([a-z_]+)/gerar", h.path)
     if not m:
