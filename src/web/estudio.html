@@ -234,7 +234,7 @@ $("#arq").onchange=e=>{receber(e.target.files);e.target.value=""};
 $("#search").addEventListener("drop",e=>receber(e.dataTransfer.files));
 addEventListener("paste",e=>{if(e.clipboardData?.files?.length)receber(e.clipboardData.files)});
 
-/* ---------- gravação por voz (para sozinho quando você para de falar) ---------- */
+/* ---------- gravação por voz (só para quando você clicar no microfone de novo) ---------- */
 function melhorMime(){return ["audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus","audio/mp4"].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||""}
 async function iniciarGravacao(){
   if(gravacao||ocupado)return;
@@ -278,8 +278,7 @@ async function iniciarGravacao(){
     const limiar=Math.max(0.01,(piso||0)*2.5);pico=Math.max(pico,rms);
     if(rms>limiar){ouviu=true;ultimo=agora}
     document.querySelectorAll(".bars i").forEach((b,i)=>b.style.height=(4+Math.min(14,rms*200*(0.5+((i*37)%5)/5)))+"px");
-    if((ouviu&&agora-ultimo>1800)||agora-t0>60000){g.parar();return}
-    if(!ouviu&&agora-t0>12000){g.parar();return}
+    // sem parada automática: a gravação só termina quando a pessoa clica no microfone de novo
     raf=requestAnimationFrame(ciclo)};
   ciclo();
 }
