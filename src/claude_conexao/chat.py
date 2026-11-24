@@ -90,9 +90,80 @@ def _executar(nome: str, entrada: dict) -> str:
         return json.dumps({"erro": str(exc)[:200]}, ensure_ascii=False)
 
 
+def _binario_cli() -> str | None:
+    import shutil
+    return os.getenv("REELS_CLAUDE_BIN") or shutil.which("claude")
+
+
+def usa_assinatura() -> bool:
+    """Sem ANTHROPIC_API_KEY, usa o Claude Code logado na conta (plano Pro/Max) do dono da instalação."""
+    return not os.getenv("ANTHROPIC_API_KEY") and bool(_binario_cli())
+
+
+def _snapshot() -> str:
+    """Contexto resumido dos escopos consentidos (para o modo assinatura, sem ferramentas)."""
+    ok = set(estado()["escopos"])
+    partes: list[str] = []
+    try:
+        if "read:projetos" in ok:
+            partes.append("PROJETOS: " + json.dumps(contexto.list_projects(), ensure_ascii=False))
+        if "read:criativos" in ok:
+            partes.append("CRIATIVOS GERADOS: " + json.dumps(
+                [{k: c.get(k) for k in ("id", "nome", "negocio", "gancho", "duracao_s")} for c in contexto.list_creatives()], ensure_ascii=False))
+    except (PermissionError, KeyError, OSError):
+        pass
+    return "\n".join(partes)[:12000]
+
+
+def _conversar_cli(texto: str, cancelado: Callable[[], bool]) -> Iterator[str]:
+    import subprocess
+    hist = "\n".join(f"{'Assistente' if m['papel'] == 'assistente' else 'Usuário'}: {m['texto']}" for m in historico()[-MAX_HISTORICO:])
+    prompt = (f"<dados_do_usuario>\n{_snapshot()}\n</dados_do_usuario>\n<conversa>\n{hist}\n</conversa>\n"
+              f"Usuário: {texto}\nResponda só a última mensagem do usuário.")
+    cmd = [_binario_cli(), "-p", prompt, "--output-format", "stream-json", "--verbose", "--include-partial-messages",
+           "--tools", "", "--disable-slash-commands", "--no-session-persistence", "--system-prompt", SYSTEM]
+    if os.getenv("CLAUDE_CHAT_MODEL"):
+        cmd += ["--model", MODELO]
+    env = {k: v for k, v in os.environ.items() if k != "ANTHROPIC_API_KEY"}
+    cwd = _arq().parent
+    _salvar("usuario", texto)
+    resposta = ""
+    proc = subprocess.Popen(cmd, cwd=cwd, env=env, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
+    try:
+        for linha in proc.stdout:
+            if cancelado():
+                proc.kill()
+                _salvar("assistente", resposta + " [interrompido]")
+                return
+            try:
+                ev = json.loads(linha)
+            except ValueError:
+                continue
+            if ev.get("type") == "stream_event":
+                d = ev.get("event", {}).get("delta", {})
+                if d.get("type") == "text_delta" and d.get("text"):
+                    resposta += d["text"]
+                    yield d["text"]
+            elif ev.get("type") == "result":
+                if ev.get("is_error"):
+                    raise ChatIndisponivel("O Claude da sua conta não respondeu. Confira se o Claude Code está logado (`claude auth status`).")
+                if not resposta and ev.get("result"):
+                    resposta = str(ev["result"])
+                    yield resposta
+        proc.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+    finally:
+        if proc.poll() is None:
+            proc.kill()
+    if not resposta:
+        raise ChatIndisponivel("O Claude da sua conta não respondeu. Confira se o Claude Code está logado (`claude auth status`).")
+    _salvar("assistente", resposta)
+
+
 def _cliente() -> Any:
     if not os.getenv("ANTHROPIC_API_KEY"):
-        raise ChatIndisponivel("O assistente ainda não está configurado neste servidor (falta a chave da Anthropic).")
+        raise ChatIndisponivel("O assistente ainda não está configurado neste servidor (instale/entre no Claude Code ou defina ANTHROPIC_API_KEY).")
     import anthropic
     return anthropic.Anthropic(max_retries=1, timeout=60)
 
@@ -106,6 +177,9 @@ def conversar(texto: str, cancelado: Callable[[], bool] = lambda: False, cliente
     if not texto:
         raise ChatIndisponivel("Escreva uma mensagem.")
     _limite_ok()
+    if cliente is None and usa_assinatura():
+        yield from _conversar_cli(texto, cancelado)
+        return
     cli = cliente or _cliente()
     msgs = [{"role": "assistant" if m["papel"] == "assistente" else "user", "content": m["texto"]}
             for m in historico()[-MAX_HISTORICO:]]

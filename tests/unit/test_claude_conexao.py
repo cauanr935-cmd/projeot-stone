@@ -113,10 +113,40 @@ def test_limite_por_hora(monkeypatch):
         list(chat.conversar("b", cliente=FakeCli((["x"], final()))))
 
 
+def _falso(tmp_path, corpo):
+    import stat
+    b = tmp_path / "claude"
+    b.write_text("#!/usr/bin/env python3\nimport sys,json\n" + corpo)
+    b.chmod(b.stat().st_mode | stat.S_IEXEC)
+    return str(b)
+
+
+def test_modo_assinatura_via_claude_code(tmp_path, monkeypatch):
+    c.conectar(["read:projetos"])
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    corpo = ("assert '--tools' in sys.argv and sys.argv[sys.argv.index('--tools')+1]==''\n"
+             "for t in ['Oi','!']:\n"
+             "    print(json.dumps({'type':'stream_event','event':{'delta':{'type':'text_delta','text':t}}}))\n"
+             "print(json.dumps({'type':'result','result':'Oi!','is_error':False}))\n")
+    monkeypatch.setenv("REELS_CLAUDE_BIN", _falso(tmp_path, corpo))
+    assert chat.usa_assinatura()
+    assert "".join(chat.conversar("oi")) == "Oi!"
+    assert chat.historico()[-1]["texto"] == "Oi!"
+
+
+def test_modo_assinatura_erro(tmp_path, monkeypatch):
+    c.conectar()
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setenv("REELS_CLAUDE_BIN", _falso(tmp_path, "print(json.dumps({'type':'result','result':'x','is_error':True}))\n"))
+    with pytest.raises(chat.ChatIndisponivel, match="logado"):
+        list(chat.conversar("oi"))
+
+
 def test_sem_chave_da_api(monkeypatch):
     c.conectar()
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    with pytest.raises(chat.ChatIndisponivel, match="chave"):
+    monkeypatch.setattr(chat, "_binario_cli", lambda: None)
+    with pytest.raises(chat.ChatIndisponivel, match="Claude Code"):
         list(chat.conversar("oi"))
 
 

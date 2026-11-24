@@ -31,8 +31,11 @@
 3. Claude Code: `claude mcp add --transport http impulso-plataforma https://SEU-HOST/mcp --header "Authorization: Bearer <token>"`.
 4. Desconectar na plataforma invalida o token na próxima chamada (testado: 401).
 
+## Modo assinatura (plano Pro/Max, sem chave de API)
+Sem `ANTHROPIC_API_KEY`, o chat usa o Claude Code logado na conta do dono da instalação (`claude auth status`): roda `claude -p` sem ferramentas, com o contexto dos escopos aceitos no prompt. Vale para uso pessoal local; o uso conta no limite do seu plano. Não é adequado para atender outras pessoas (isso exige chave de API). Testado com a conta real em streaming.
+
 ## Limitações conhecidas (honestas)
 - **OAuth 2.1/PKCE com registro dinâmico de clientes NÃO foi implementado.** Há token Bearer. Conectores personalizados do claude.ai exigem OAuth; por enquanto o caminho suportado é o Claude Code com `--header`.
 - Sem contas de usuário: não há isolamento multiusuário; o teste de "dois usuários" não se aplica.
 - Ferramentas de escrita (`MCP_WRITE_TOOLS`) não foram implementadas.
-- Não foi testado contra a API real da Anthropic (sem chave); o chat foi testado com cliente simulado.
+- O caminho por chave de API foi testado só com cliente simulado; o modo assinatura foi testado de verdade.
