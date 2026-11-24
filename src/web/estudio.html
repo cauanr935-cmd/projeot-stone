@@ -161,6 +161,18 @@ footer{border-top:1px solid var(--line);color:var(--mut);font-size:.82rem;paddin
   <footer>Voz e vídeo gerados localmente (Pillow + ffmpeg, Kokoro e Whisper), sem custo por vídeo. Pelo Claude: <a href="/base">veja a base de referência</a>; o MCP está no README.</footer>
 </div>
 
+<dialog id="dlgClaude" aria-labelledby="dlgT" style="max-width:520px;width:calc(100% - 32px);background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:18px;padding:22px">
+  <h2 id="dlgT" style="margin:0 0 8px">Conectar Claude</h2>
+  <p id="dlgTxt" style="color:var(--mut);line-height:1.5;margin:0 0 12px"></p>
+  <div id="dlgEscopos"></div>
+  <div id="dlgUsar" hidden>
+    <h3 style="margin:16px 0 6px;font-size:1rem">Usar no meu Claude</h3>
+    <p style="color:var(--mut);font-size:.9rem;margin:0 0 8px">No Claude Code, depois de publicar o servidor MCP com URL HTTPS, rode (o token abaixo aparece só agora):</p>
+    <code id="dlgCmd" style="display:block;background:#0006;padding:10px;border-radius:10px;word-break:break-all;font-size:.8rem"></code>
+  </div>
+  <p id="dlgErr" class="note err" hidden></p>
+  <div class="act" style="margin-top:16px"><button class="btn" id="dlgOk"></button><button class="btn sec" id="dlgDes" hidden>Desconectar</button><button class="btn sec" id="dlgFechar">Fechar</button></div>
+</dialog>
 <script>
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -383,18 +395,6 @@ if(!navigator.mediaDevices||!window.MediaRecorder)$("#mic").title="Seu navegador
 speechSynthesis&&speechSynthesis.getVoices();
 </script>
 
-<dialog id="dlgClaude" aria-labelledby="dlgT" style="max-width:520px;width:calc(100% - 32px);background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:18px;padding:22px">
-  <h2 id="dlgT" style="margin:0 0 8px">Conectar Claude</h2>
-  <p id="dlgTxt" style="color:var(--mut);line-height:1.5;margin:0 0 12px"></p>
-  <div id="dlgEscopos"></div>
-  <div id="dlgUsar" hidden>
-    <h3 style="margin:16px 0 6px;font-size:1rem">Usar no meu Claude</h3>
-    <p style="color:var(--mut);font-size:.9rem;margin:0 0 8px">No Claude Code, depois de publicar o servidor MCP com URL HTTPS, rode (o token abaixo aparece só agora):</p>
-    <code id="dlgCmd" style="display:block;background:#0006;padding:10px;border-radius:10px;word-break:break-all;font-size:.8rem"></code>
-  </div>
-  <p id="dlgErr" class="note err" hidden></p>
-  <div class="act" style="margin-top:16px"><button class="btn" id="dlgOk"></button><button class="btn sec" id="dlgDes" hidden>Desconectar</button><button class="btn sec" id="dlgFechar">Fechar</button></div>
-</dialog>
 <script src="/acessibilidade.js" defer></script>
 </body>
 </html>
